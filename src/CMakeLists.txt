@@ -7,4 +7,5 @@ add_executable(rossumo.exe
   rossumo.cpp
   ../include/rossumo/rossumo.h
 )
-target_link_libraries(rossumo.exe  ${catkin_LIBRARIES}  arsal  arcontroller  ardiscovery  ncurses)
+target_link_libraries(rossumo.exe  ${catkin_LIBRARIES}
+  arsal  arcontroller  ardiscovery  ncurses ${OpenCV_LIBRARIES})
