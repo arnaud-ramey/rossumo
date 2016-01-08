@@ -1,0 +1,5 @@
+<launch>
+<node pkg="rossumo" type="rossumo.exe" name="rossumo" required="true" output="screen"
+      args="_device_mac:=00:19:0E:16:AF:22  _sumo_mac:=D0:39:72:B7:AF:66"
+/>
+</launch>
