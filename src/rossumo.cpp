@@ -42,6 +42,9 @@ extern "C" {
 }
 
 #include "opencv2/highgui/highgui.hpp"
+#include "ros/ros.h"
+#include <boost/thread/mutex.hpp>
+boost::mutex pic_mutex;
 
 #define TAG "SDKExample"
 #define ERROR_STR_LENGTH 2048
@@ -58,6 +61,8 @@ FILE *videoOut = NULL;
 int writeImgs = 0;
 int frameNb = 0;
 ARSAL_Sem_t stateSem;
+cv::Mat pic;
+bool has_new_pic = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +76,8 @@ void stateChanged (eARCONTROLLER_DEVICE_STATE newState, eARCONTROLLER_ERROR erro
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
       ARSAL_Sem_Post (&(stateSem));
       //stop
-      gIHMRun = 0;
+      //gIHMRun = 0;
+      ros::shutdown();
 
       break;
 
@@ -82,6 +88,20 @@ void stateChanged (eARCONTROLLER_DEVICE_STATE newState, eARCONTROLLER_ERROR erro
     default:
       break;
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void batteryStateChanged (uint8_t percent)
+{
+  printf("batteryStateChanged(%i)\n", percent);
+  // callback of changing of battery level
+
+  //  if (ihm != NULL)
+  //  {
+  //    IHM_PrintBattery (ihm, percent);
+  //  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +136,7 @@ void commandReceived (eARCONTROLLER_DICTIONARY_KEY commandKey,
           if (arg != NULL)
           {
             // update UI
-            //batteryStateChanged (arg->value.U8);
+            batteryStateChanged (arg->value.U8);
           }
           else
           {
@@ -138,25 +158,10 @@ void commandReceived (eARCONTROLLER_DICTIONARY_KEY commandKey,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void batteryStateChanged (uint8_t percent)
-{
-  printf("batteryStateChanged(%i)\n", percent);
-  // callback of changing of battery level
-
-  //  if (ihm != NULL)
-  //  {
-  //    IHM_PrintBattery (ihm, percent);
-  //  }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 eARCONTROLLER_ERROR decoderConfigCallback (ARCONTROLLER_Stream_Codec_t codec, void *customData)
 {
   printf("decoderConfigCallback()\n");
   ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "decoderConfigCallback codec.type :%d", codec.type);
-
   return ARCONTROLLER_OK;
 }
 
@@ -164,45 +169,12 @@ eARCONTROLLER_ERROR decoderConfigCallback (ARCONTROLLER_Stream_Codec_t codec, vo
 
 eARCONTROLLER_ERROR didReceiveFrameCallback (ARCONTROLLER_Frame_t *frame, void *customData)
 {
-  printf("decoderConfigCallback()\n");
+  ROS_INFO_THROTTLE(1, "didReceiveFrameCallback(%i)", frame->used);
   std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
-  cv::Mat pic = cv::imdecode(cv::Mat (ans_vector), -1);
-  if (pic.empty())
-    printf("pic empty!\n");
-  else
-    cv::imshow("pic", pic);
-  cv::waitKey(5);
-  //  if (videoOut != NULL)
-  //  {
-  //    if (frame != NULL)
-  //    {
-  //      if (DISPLAY_WITH_MPLAYER)
-  //      {
-  //        fwrite(frame->data, frame->used, 1, videoOut);
-
-  //        fflush (videoOut);
-  //      }
-  //      else if (writeImgs)
-  //      {
-  //        char filename[20];
-  //        snprintf(filename, sizeof(filename), "video/img_%d.jpg", frameNb);
-
-  //        frameNb++;
-  //        FILE *img = fopen(filename, "w");
-  //        fwrite(frame, frame->used, 1, img);
-  //        fclose(img);
-  //      }
-  //    }
-  //    else
-  //    {
-  //      ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG, "frame is NULL.");
-  //    }
-  //  }
-  //  else
-  //  {
-  //    ARSAL_PRINT(ARSAL_PRINT_WARNING, TAG, "videoOut is NULL.");
-  //  }
-
+  pic_mutex.lock();
+  pic = cv::imdecode(cv::Mat (ans_vector), -1);
+  has_new_pic = true;
+  pic_mutex.unlock();
   return ARCONTROLLER_OK;
 }
 
@@ -297,7 +269,9 @@ eARCONTROLLER_ERROR didReceiveFrameCallback (ARCONTROLLER_Frame_t *frame, void *
 
 int main (int argc, char *argv[])
 {
-  printf("test!\n");
+  ros::init(argc, argv, "rossumo");
+  cv::namedWindow("sumo");
+  ros::NodeHandle nh_public;
   // local declarations
   ARDISCOVERY_Device_t *device = NULL;
   ARCONTROLLER_Device_t *deviceController = NULL;
@@ -307,55 +281,6 @@ int main (int argc, char *argv[])
   ARSAL_Sem_Init (&(stateSem), 0, 0);
 
   ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "-- Jumping Sumo Piloting --");
-
-//  if (DISPLAY_WITH_MPLAYER)
-//  {
-//    // fork the process to launch ffplay
-//    if ((child = fork()) == 0)
-//    {
-//      execlp("xterm", "xterm", "-e", "mplayer", "-demuxer",  "lavf", "video_fifo.mjpg", "-benchmark", "-really-quiet", NULL);
-//      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "Missing mplayer, you will not see the video. Please install mplayer and xterm.");
-//      return -1;
-//    }
-//  }
-//  else
-//  {
-//    // create the video folder to store video images
-//    char answer = 'N';
-//    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "Do you want to write image files on your file system ? You should have at least 50Mb. Y or N");
-//    scanf("%c", &answer);
-//    if (answer == 'Y' || answer == 'y')
-//    {
-//      ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "You choose to write image files.");
-//      writeImgs = 1;
-//      mkdir("video", S_IRWXU);
-//    }
-//    else
-//    {
-//      ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "You did not choose to write image files.");
-//    }
-//  }
-
-//  if (DISPLAY_WITH_MPLAYER)
-//  {
-//    videoOut = fopen("./video_fifo.mjpg", "w");
-//  }
-
-//#ifdef IHM
-//  ihm = IHM_New (&onInputEvent);
-//  if (ihm != NULL)
-//  {
-//    gErrorStr[0] = '\0';
-//    ARSAL_Print_SetCallback (customPrintCallback); //use a custom callback to print, for not disturb ncurses IHM
-
-//    IHM_PrintHeader (ihm, "-- Jumping Sumo Piloting --");
-//  }
-//  else
-//  {
-//    ARSAL_PRINT (ARSAL_PRINT_ERROR, TAG, "Creation of IHM failed.");
-//    printf("Fail at line %i\n", __LINE__); exit(-1);
-//  }
-//#endif
 
   // create a discovery device
   ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- init discovey device ... ");
@@ -457,20 +382,40 @@ int main (int argc, char *argv[])
 
   //IHM_PrintInfo(ihm, "Running ... (Arrow keys to move ; Spacebar to jump ; 'q' to quit)");
 
-#ifdef IHM
-  while (gIHMRun)
-  {
-    usleep(50);
-  }
-#else
-  ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- sleep 20 ... ");
-  sleep(20);
-  ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- sleep end ... ");
-#endif
+//#ifdef IHM
+//  while (gIHMRun)
+//  {
+//    usleep(50);
+//  }
+//#else
+//  ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- sleep 20 ... ");
+//  sleep(20);
+//  ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- sleep end ... ");
+//#endif
 
-#ifdef IHM
-  IHM_Delete (&ihm);
-#endif
+//#ifdef IHM
+//  IHM_Delete (&ihm);
+//#endif
+  while(ros::ok()) {
+    ros::spinOnce();
+    pic_mutex.lock();
+    if (pic.empty())
+      printf("pic empty!\n");
+    else if (has_new_pic)
+      cv::imshow("sumo", pic);
+    has_new_pic = false;
+    pic_mutex.unlock();
+    char c = cv::waitKey(25);
+    if (c == '8') { // go forward
+      error = deviceController->jumpingSumo->setPilotingPCMDFlag (deviceController->jumpingSumo, 1);
+      error = deviceController->jumpingSumo->setPilotingPCMDSpeed (deviceController->jumpingSumo, 50);
+    }
+    else { // stop robot
+      error = deviceController->jumpingSumo->setPilotingPCMDFlag (deviceController->jumpingSumo, 0);
+      error = deviceController->jumpingSumo->setPilotingPCMDSpeed (deviceController->jumpingSumo, 0);
+      error = deviceController->jumpingSumo->setPilotingPCMDTurn (deviceController->jumpingSumo, 0);
+    }
+  }
 
   // we are here because of a disconnection or user has quit IHM, so safely delete everything
   if (deviceController != NULL)
@@ -493,16 +438,16 @@ int main (int argc, char *argv[])
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "ARCONTROLLER_Device_Delete ...");
     ARCONTROLLER_Device_Delete (&deviceController);
 
-    if (DISPLAY_WITH_MPLAYER)
-    {
-      fflush (videoOut);
-      fclose (videoOut);
+//    if (DISPLAY_WITH_MPLAYER)
+//    {
+//      fflush (videoOut);
+//      fclose (videoOut);
 
-      if (child > 0)
-      {
-        kill(child, SIGKILL);
-      }
-    }
+//      if (child > 0)
+//      {
+//        kill(child, SIGKILL);
+//      }
+//    }
   }
 
   ARSAL_Sem_Destroy (&(stateSem));
