@@ -7,9 +7,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra") # add extra warnings
 find_package(catkin REQUIRED COMPONENTS roscpp roslib
                                         std_msgs)
 #SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
-#ARDrone libs
-include_directories(/home/arnaud/sumo/out/Unix-base/staging/usr/include/)
-link_directories(/home/arnaud/sumo/out/Unix-base/staging/usr/lib/)
 # other libs
 find_package(OpenCV REQUIRED)
 ### 4 - Message/Service/Action Generators (add_message_files(), add_service_files(), add_action_files())

@@ -22,7 +22,8 @@ ________________________________________________________________________________
 
 \class Rossumo
   The interface between "libsumo" and ROS.
- */
+
+*/
 /**
  * @file JumpingSumoPiloting.c
  * @brief This file contains sources about basic arsdk example sending commands to a JumpingSumo for piloting it and make it jump it and receiving its battery level
@@ -372,8 +373,9 @@ int main (int argc, char *argv[])
   }
 
   // send the command that tells to the Jumping to begin its streaming
+  ARCONTROLLER_FEATURE_JumpingSumo_t* js = deviceController->jumpingSumo;
   ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- send StreamingVideoEnable ... ");
-  error = deviceController->jumpingSumo->sendMediaStreamingVideoEnable (deviceController->jumpingSumo, 1);
+  error = js->sendMediaStreamingVideoEnable (js, 1);
   if (error != ARCONTROLLER_OK)
   {
     ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(error));
@@ -405,15 +407,38 @@ int main (int argc, char *argv[])
       cv::imshow("sumo", pic);
     has_new_pic = false;
     pic_mutex.unlock();
-    char c = cv::waitKey(25);
-    if (c == '8') { // go forward
-      error = deviceController->jumpingSumo->setPilotingPCMDFlag (deviceController->jumpingSumo, 1);
-      error = deviceController->jumpingSumo->setPilotingPCMDSpeed (deviceController->jumpingSumo, 50);
+    char c = cv::waitKey(50);
+    // Commands in Sources/ARCONTROLLER_Feature.h - line 1405
+    if (c == 'i') { // go forward
+      error = js->setPilotingPCMDFlag (js, 1);
+      error = js->setPilotingPCMDSpeed (js, 50); // @param speed Speed value [-100:100]
+    }
+    else if (c == 'u') { // go diagonal
+      error = js->setPilotingPCMDFlag (js, 1);
+      error = js->setPilotingPCMDSpeed (js, 50);
+      error = js->sendPilotingAddCapOffset(js, -.05); // @param offset Offset value in radians
+      //error = js->setPilotingPCMDTurn (js, 50);
+    }
+    else if (c == 'o') { // go diagonal
+      error = js->setPilotingPCMDFlag (js, 1);
+      error = js->setPilotingPCMDSpeed (js, 50);
+      error = js->sendPilotingAddCapOffset(js, .05); // @param offset Offset value in radians
+    }
+    else if (c == 'k') { // go backwards
+      error = js->setPilotingPCMDFlag (js, 1);
+      error = js->setPilotingPCMDSpeed (js, -50);
+    }
+    else if (c == 'j') { // turn left on place
+      error = js->setPilotingPCMDFlag (js, 1);
+      error = js->sendPilotingAddCapOffset(js, -.05); // @param offset Offset value in radians
+    }
+    else if (c == 'l') { // turn left on place
+      error = js->sendPilotingAddCapOffset(js, .05); // @param offset Offset value in radians
     }
     else { // stop robot
-      error = deviceController->jumpingSumo->setPilotingPCMDFlag (deviceController->jumpingSumo, 0);
-      error = deviceController->jumpingSumo->setPilotingPCMDSpeed (deviceController->jumpingSumo, 0);
-      error = deviceController->jumpingSumo->setPilotingPCMDTurn (deviceController->jumpingSumo, 0);
+      error = js->setPilotingPCMDFlag (js, 0);
+      error = js->setPilotingPCMDSpeed (js, 0);
+      error = js->setPilotingPCMDTurn (js, 0);
     }
   }
 
