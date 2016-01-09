@@ -4,9 +4,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rossumo)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra") # add extra warnings
 ### 3 - Find other CMake/Catkin packages needed for build
-find_package(catkin REQUIRED COMPONENTS roscpp roslib
-                                        std_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp roslib cv_bridge image_transport std_msgs)
 #SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
+#ARDrone libs
+SET(ARDRONESDK3_PATH /home/arnaud/sumo/out/Unix-base/staging/usr)
+include_directories(${ARDRONESDK3_PATH}/include)
+link_directories(${ARDRONESDK3_PATH}/lib/)
+set(ARDRONESDK3_LIBRARIES  arsal  arcontroller  ardiscovery)
 # other libs
 find_package(OpenCV REQUIRED)
 ### 4 - Message/Service/Action Generators (add_message_files(), add_service_files(), add_action_files())
@@ -16,7 +20,7 @@ find_package(OpenCV REQUIRED)
 ### 6 - Specify package build info export (catkin_package())
 catkin_package(
   INCLUDE_DIRS   include  src
-  CATKIN_DEPENDS roscpp roslib std_msgs
+  CATKIN_DEPENDS roscpp roslib cv_bridge image_transport std_msgs
 )
 ### 7 - Libraries/Executables to build (add_library()/add_executable()/target_link_libraries())
 include_directories(include  src  ${catkin_INCLUDE_DIRS})

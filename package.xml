@@ -4,7 +4,7 @@
   <name>rossumo</name>
   <version>0.0.0</version>
   <description>
-      The interface between "libsumo" and ROS.
+      Wrapper of the ARDroneSDK3 sample "JumpingSumoPiloting.c" as a C++ lightweight class for ROS.
   </description>
   <maintainer email="arnaud.a.ramey@gmail.com">Arnaud Ramey</maintainer>
   <license>GPLv2</license>
@@ -12,8 +12,9 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
   <depend>roslib</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
   <depend>std_msgs</depend>
-  <depend>pulse</depend>
   <export>
         <rosdoc config="rosdoc.yaml" /> <!-- http://wiki.ros.org/rosdoc_lite -->
       <cpp cflags="-I${prefix} -I${prefix}/build"
