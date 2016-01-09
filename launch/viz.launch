@@ -1,4 +1,4 @@
 <launch>
 <node pkg="image_view" type="image_view" output="screen" name="rgb_viewer"
-      args="image:=rgb"/>
+      args="image:=/rossumo1/rgb"/>
 </launch>

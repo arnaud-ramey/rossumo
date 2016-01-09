@@ -24,15 +24,22 @@ ________________________________________________________________________________
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/Twist.h>
+
+LightSumo sumo;
+
+void cmd_vel_cb(const geometry_msgs::TwistConstPtr & msg) {
+  sumo.set_speeds(msg->linear.x, -msg->angular.z);
+}
 
 int main (int argc, char **argv) {
   ros::init(argc, argv, "rossumo");
-  ros::NodeHandle nh_public;
+  ros::NodeHandle nh_public, nh_private("~");
   // create publishers and subscribers
-  image_transport::ImageTransport it(nh_public);
+  image_transport::ImageTransport it(nh_private);
   image_transport::Publisher rgb_pub = it.advertise("rgb", 1);
+  ros::Subscriber cmd_vel_sub = nh_private.subscribe("cmd_vel", 1, cmd_vel_cb);
   // create and connect robot
-  LightSumo sumo;
   if (!sumo.connect())
     exit(-1);
   // data
@@ -43,7 +50,7 @@ int main (int argc, char **argv) {
   ros::Rate rate(100);
   while(ros::ok()) {
     ros::Time now = ros::Time::now();
-    if (sumo.get_pic_idx() != last_pix_idx) {
+    if (rgb_pub.getNumSubscribers() && sumo.get_pic_idx() != last_pix_idx) {
       last_pix_idx = sumo.get_pic_idx();
       sumo.get_pic(rgb.image);
       if (rgb.image.empty())
