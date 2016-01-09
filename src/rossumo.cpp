@@ -25,45 +25,71 @@ ________________________________________________________________________________
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Float32.h>
 
-LightSumo sumo;
+class RosSumo : public LightSumo {
+public:
+  RosSumo() : _nh_private("~") {
+    // create publishers and subscribers
+    _it = new image_transport::ImageTransport(_nh_private);
+    _rgb_pub = _it->advertise("rgb", 1);
+    _cmd_vel_sub = _nh_private.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
+    _rgb.encoding = "bgr8";
+  }
 
-void cmd_vel_cb(const geometry_msgs::TwistConstPtr & msg) {
-  sumo.set_speeds(msg->linear.x, -msg->angular.z);
-}
+  //////////////////////////////////////////////////////////////////////////////
+
+  ~RosSumo() { delete _it; }
+
+  //////////////////////////////////////////////////////////////////////////////
+protected:
+  //////////////////////////////////////////////////////////////////////////////
+
+  //! callback called when a new image is received
+  virtual void imageChanged () {
+    if (!_rgb_pub.getNumSubscribers())
+      return;
+    get_pic(_rgb.image);
+    if (_rgb.image.empty())
+      printf("pic empty!\n");
+    else {
+      // publish pic
+      _rgb.header.stamp = ros::Time::now();
+      _rgb.header.frame_id = "sumo_camera_frame";
+      _rgb_pub.publish(_rgb.toImageMsg());
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void cmd_vel_cb(const geometry_msgs::TwistConstPtr & msg) {
+    set_speeds(msg->linear.x, -msg->angular.z);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  virtual void batteryStateChanged (uint8_t percent) {
+    printf("batteryStateChanged(%i%%)\n", percent);
+    _nh_private.setParam("battery_percentage", percent);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  image_transport::ImageTransport* _it;
+  image_transport::Publisher _rgb_pub;
+  ros::Subscriber _cmd_vel_sub;
+  std_msgs::Float32 _float_msg;
+  ros::NodeHandle _nh_public, _nh_private;
+  cv_bridge::CvImage _rgb;
+}; // end class RosSumo
+
+////////////////////////////////////////////////////////////////////////////////
 
 int main (int argc, char **argv) {
   ros::init(argc, argv, "rossumo");
-  ros::NodeHandle nh_public, nh_private("~");
-  // create publishers and subscribers
-  image_transport::ImageTransport it(nh_private);
-  image_transport::Publisher rgb_pub = it.advertise("rgb", 1);
-  ros::Subscriber cmd_vel_sub = nh_private.subscribe("cmd_vel", 1, cmd_vel_cb);
-  // create and connect robot
+  RosSumo sumo;
   if (!sumo.connect())
     exit(-1);
-  // data
-  cv_bridge::CvImage rgb;
-  rgb.encoding = "bgr8";
-  unsigned int last_pix_idx = -1;
-  // data acquisition loop
-  ros::Rate rate(100);
-  while(ros::ok()) {
-    ros::Time now = ros::Time::now();
-    if (rgb_pub.getNumSubscribers() && sumo.get_pic_idx() != last_pix_idx) {
-      last_pix_idx = sumo.get_pic_idx();
-      sumo.get_pic(rgb.image);
-      if (rgb.image.empty())
-        printf("pic empty!\n");
-      else {
-        // publish pic
-        rgb.header.stamp = now;
-        rgb.header.frame_id = "sumo_camera_frame";
-        rgb_pub.publish(rgb.toImageMsg());
-      }
-    }
-    ros::spinOnce();
-    rate.sleep();
-  } // end while (ros::ok())
+  ros::spin();
   return EXIT_SUCCESS;
 } // end main()

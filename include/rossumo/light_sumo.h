@@ -46,13 +46,13 @@ public:
   ~LightSumo() {
     // we are here because of a disconnection or user has quit IHM, so safely delete everything
     if (deviceController != NULL) {
-      deviceState = ARCONTROLLER_Device_GetState (deviceController, &error);
-      if ((error == ARCONTROLLER_OK) && (deviceState != ARCONTROLLER_DEVICE_STATE_STOPPED)) {
+      deviceState = ARCONTROLLER_Device_GetState (deviceController, &errorController);
+      if ((errorController == ARCONTROLLER_OK) && (deviceState != ARCONTROLLER_DEVICE_STATE_STOPPED)) {
         //IHM_PrintInfo(ihm, "Disconnecting ...");
         ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "Disconnecting ...");
 
-        error = ARCONTROLLER_Device_Stop (deviceController);
-        if (error == ARCONTROLLER_OK) {
+        errorController = ARCONTROLLER_Device_Stop (deviceController);
+        if (errorController == ARCONTROLLER_OK) {
           // wait state update update
           ARSAL_Sem_Wait (&(stateSem));
         }
@@ -70,9 +70,9 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void set_speeds(double v, double w) {
-    error = js()->setPilotingPCMDFlag     (js(), 1);
-    error = js()->setPilotingPCMDSpeed    (js(), v); // @param speed Speed value [-100:100]
-    error = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
+    errorController = js()->setPilotingPCMDFlag     (js(), 1);
+    errorController = js()->setPilotingPCMDSpeed    (js(), v); // @param speed Speed value [-100:100]
+    errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ public:
   bool connect() {
     device = NULL;
     deviceController = NULL;
-    error = ARCONTROLLER_OK;
+    errorController = ARCONTROLLER_OK;
     deviceState = ARCONTROLLER_DEVICE_STATE_MAX;
     pic_idx = -1;
     ARSAL_Sem_Init (&(stateSem), 0, 0);
@@ -100,25 +100,24 @@ public:
     eARDISCOVERY_ERROR errorDiscovery = ARDISCOVERY_OK;
 
     device = ARDISCOVERY_Device_New (&errorDiscovery);
-    if (errorDiscovery == ARDISCOVERY_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "    - ARDISCOVERY_Device_InitWifi ...");
-      // create a JumpingSumo discovery device (ARDISCOVERY_PRODUCT_JS)
-      errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_JS, "JS", JS_IP_ADDRESS, JS_DISCOVERY_PORT);
-      if (errorDiscovery != ARDISCOVERY_OK) {
-        ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "Discovery error :%s", ARDISCOVERY_Error_ToString(errorDiscovery));
-        printf("Fail at line %i\n", __LINE__);
-        return false;
-      }
+    if (errorDiscovery != ARDISCOVERY_OK) {
+      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "Discovery error :%s", ARDISCOVERY_Error_ToString(errorDiscovery));
+      printf("Fail at line %i\n", __LINE__);
+      return false;
     }
-    else {
+
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "    - ARDISCOVERY_Device_InitWifi ...");
+    // create a JumpingSumo discovery device (ARDISCOVERY_PRODUCT_JS)
+    errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_JS, "JS", JS_IP_ADDRESS, JS_DISCOVERY_PORT);
+    if (errorDiscovery != ARDISCOVERY_OK) {
       ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "Discovery error :%s", ARDISCOVERY_Error_ToString(errorDiscovery));
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
 
     // create a device controller
-    deviceController = ARCONTROLLER_Device_New (device, &error);
-    if (error != ARCONTROLLER_OK) {
+    deviceController = ARCONTROLLER_Device_New (device, &errorController);
+    if (errorController != ARCONTROLLER_OK) {
       ARSAL_PRINT (ARSAL_PRINT_ERROR, TAG, "Creation of deviceController failed.");
       printf("Fail at line %i\n", __LINE__);
       return false;
@@ -128,16 +127,16 @@ public:
     ARDISCOVERY_Device_Delete (&device);
 
     // add the state change callback to be informed when the device controller starts, stops...
-    error = ARCONTROLLER_Device_AddStateChangedCallback (deviceController, stateChanged, this);
-    if (error != ARCONTROLLER_OK) {
+    errorController = ARCONTROLLER_Device_AddStateChangedCallback (deviceController, stateChanged, this);
+    if (errorController != ARCONTROLLER_OK) {
       ARSAL_PRINT (ARSAL_PRINT_ERROR, TAG, "add State callback failed.");
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
 
     // add the command received callback to be informed when a command has been received from the device
-    error = ARCONTROLLER_Device_AddCommandReceivedCallback (deviceController, commandReceived, this);
-    if (error != ARCONTROLLER_OK) {
+    errorController = ARCONTROLLER_Device_AddCommandReceivedCallback (deviceController, commandReceived, this);
+    if (errorController != ARCONTROLLER_OK) {
       ARSAL_PRINT (ARSAL_PRINT_ERROR, TAG, "add callback failed.");
       printf("Fail at line %i\n", __LINE__);
       return false;
@@ -145,17 +144,17 @@ public:
 
     // add the frame received callback to be informed when a streaming frame has been received from the device
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set Video callback ... ");
-    error = ARCONTROLLER_Device_SetVideoStreamCallbacks (deviceController, decoderConfigCallback, didReceiveFrameCallback, NULL , this);
-    if (error != ARCONTROLLER_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%", ARCONTROLLER_Error_ToString(error));
+    errorController = ARCONTROLLER_Device_SetVideoStreamCallbacks (deviceController, decoderConfigCallback, didReceiveFrameCallback, NULL , this);
+    if (errorController != ARCONTROLLER_OK) {
+      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%", ARCONTROLLER_Error_ToString(errorController));
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
 
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "Connecting ...");
-    error = ARCONTROLLER_Device_Start (deviceController);
-    if (error != ARCONTROLLER_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(error));
+    errorController = ARCONTROLLER_Device_Start (deviceController);
+    if (errorController != ARCONTROLLER_OK) {
+      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(errorController));
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
@@ -163,19 +162,19 @@ public:
     // wait state update update
     ARSAL_Sem_Wait (&(stateSem));
 
-    deviceState = ARCONTROLLER_Device_GetState (deviceController, &error);
-    if ((error != ARCONTROLLER_OK) || (deviceState != ARCONTROLLER_DEVICE_STATE_RUNNING)) {
+    deviceState = ARCONTROLLER_Device_GetState (deviceController, &errorController);
+    if ((errorController != ARCONTROLLER_OK) || (deviceState != ARCONTROLLER_DEVICE_STATE_RUNNING)) {
       ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- deviceState :%d", deviceState);
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(error));
+      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(errorController));
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
 
     // send the command that tells to the Jumping to begin its streaming
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- send StreamingVideoEnable ... ");
-    error = js()->sendMediaStreamingVideoEnable (js(), 1);
-    if (error != ARCONTROLLER_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(error));
+    errorController = js()->sendMediaStreamingVideoEnable (js(), 1);
+    if (errorController != ARCONTROLLER_OK) {
+      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(errorController));
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
@@ -218,8 +217,14 @@ protected:
   ////////////////////////////////////////////////////////////////////////////////
 
   //! callback of changing of battery level
-  void batteryStateChanged (uint8_t percent) {
+  virtual void batteryStateChanged (uint8_t percent) {
     printf("batteryStateChanged(%i)\n", percent);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  //! callback called when a new image is received
+  virtual void imageChanged () {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -276,6 +281,7 @@ protected:
     this_ptr->pic = cv::imdecode(cv::Mat (ans_vector), -1);
     this_ptr->pic_idx++;
     this_ptr->pic_mutex.unlock();
+    this_ptr->imageChanged();
     return ARCONTROLLER_OK;
   } // end didReceiveFrameCallback()
 
@@ -285,7 +291,7 @@ protected:
   ARDISCOVERY_Device_t *device;
   ARCONTROLLER_Device_t *deviceController;
   ARSAL_Sem_t stateSem;
-  eARCONTROLLER_ERROR error;
+  eARCONTROLLER_ERROR errorController;
   eARCONTROLLER_DEVICE_STATE deviceState;
   cv::Mat pic;
   unsigned int pic_idx;
