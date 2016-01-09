@@ -7,7 +7,7 @@ link_directories(${ARDRONESDK3_PATH}/lib/)
 #message("ARDRONESDK3_HEADERS:${ARDRONESDK3_HEADERS}")
 add_executable(rossumo.exe
   rossumo.cpp
-  ../include/rossumo/rossumo.h
+  ../include/rossumo/light_sumo.h
   ${ARDRONESDK3_HEADERS}
 )
 target_link_libraries(rossumo.exe  ${catkin_LIBRARIES}
