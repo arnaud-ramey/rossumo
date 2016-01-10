@@ -56,6 +56,8 @@ int main (/*int argc, char **argv*/) {
       sumo.set_speeds(0, -0.05);
     else if (c == 'l')  // turn left on place
       sumo.set_speeds(0, 0.05);
+    else if (c == ' ')
+      sumo.high_jump();
     else if (c == 'q' || c == 27)  //ESC
       break;
     else  // stop robot

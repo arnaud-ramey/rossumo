@@ -22,6 +22,9 @@ ________________________________________________________________________________
 
 \class LightSumo
   Wrapper of the ARDroneSDK3 sample "JumpingSumoPiloting.c" as a C++ lightweight class.
+
+  The available functions in the SDK are in include/libARController/ARCONTROLLER_Feature.h
+  from line 1156.
  */
 #ifndef LIGHT_SUMO_H
 #define LIGHT_SUMO_H
@@ -73,6 +76,19 @@ public:
     errorController = js()->setPilotingPCMDFlag     (js(), 1);
     errorController = js()->setPilotingPCMDSpeed    (js(), v); // @param speed Speed value [-100:100]
     errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void high_jump() {
+    errorController = js()->sendAnimationsJump (js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_JUMP_TYPE_HIGH);
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void long_jump() {
+    errorController = js()->sendAnimationsJump (js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_JUMP_TYPE_LONG);
   }
 
   //////////////////////////////////////////////////////////////////////////////

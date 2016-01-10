@@ -35,6 +35,7 @@
 
 import roslib; roslib.load_manifest('rossumo')
 import rospy
+import std_msgs
 import sensor_msgs
 import geometry_msgs
 
@@ -42,18 +43,29 @@ from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
 
 def mycallback(joy):
+  global high_jump_before
   vel = geometry_msgs.msg.Twist()
   vel.linear.x = (joy.axes[axis_linear] * scale_linear);
   vel.angular.z = (joy.axes[axis_angular] * scale_angular);
-  pub.publish(vel)
+  joy_pub.publish(vel)
+  if (joy.buttons[button_high_jump]):
+    if (high_jump_before == False):
+      print("Starting high jump!")
+      high_jump_before = True
+      high_jump_pub.publish(std_msgs.msg.Empty())
+  else:
+    high_jump_before = False
 
 if __name__ == '__main__':
   name ='sumo_teleop_joy'
   rospy.init_node(name)
   axis_linear = rospy.get_param('~axis_linear', 1)
   axis_angular = rospy.get_param('~axis_angular', 2)
+  button_high_jump = rospy.get_param('~button_high_jump', 4)
   scale_linear = rospy.get_param('~scale_linear', 1.0)
   scale_angular = rospy.get_param('~scale_angular', 1.0)
-  sub = rospy.Subscriber("joy", sensor_msgs.msg.Joy, mycallback)
-  pub = rospy.Publisher("cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
+  joy_sub = rospy.Subscriber("/joy", sensor_msgs.msg.Joy, mycallback)
+  joy_pub = rospy.Publisher("cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
+  high_jump_pub = rospy.Publisher("high_jump", std_msgs.msg.Empty, queue_size=1)
+  high_jump_before = False
   rospy.spin()

@@ -26,14 +26,17 @@ ________________________________________________________________________________
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Empty.h>
 
 class RosSumo : public LightSumo {
 public:
   RosSumo() : _nh_private("~") {
     // create publishers and subscribers
-    _it = new image_transport::ImageTransport(_nh_private);
+    _it = new image_transport::ImageTransport(_nh_public);
+    _cmd_vel_sub = _nh_public.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
+    _high_jump_sub = _nh_public.subscribe("high_jump", 1, &RosSumo::high_jump_cb, this);
+    _long_jump_sub = _nh_public.subscribe("long_jump", 1, &RosSumo::long_jump_cb, this);
     _rgb_pub = _it->advertise("rgb", 1);
-    _cmd_vel_sub = _nh_private.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
     _rgb.encoding = "bgr8";
   }
 
@@ -68,6 +71,11 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
 
+  void high_jump_cb(const std_msgs::Empty &) { high_jump(); }
+  void long_jump_cb(const std_msgs::Empty &) { long_jump(); }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   virtual void batteryStateChanged (uint8_t percent) {
     printf("batteryStateChanged(%i%%)\n", percent);
     _nh_private.setParam("battery_percentage", percent);
@@ -77,7 +85,7 @@ protected:
 
   image_transport::ImageTransport* _it;
   image_transport::Publisher _rgb_pub;
-  ros::Subscriber _cmd_vel_sub;
+  ros::Subscriber _cmd_vel_sub, _high_jump_sub, _long_jump_sub;
   std_msgs::Float32 _float_msg;
   ros::NodeHandle _nh_public, _nh_private;
   cv_bridge::CvImage _rgb;

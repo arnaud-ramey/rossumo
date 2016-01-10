@@ -17,11 +17,12 @@
   <remap from="turtlebot_teleop_joystick/cmd_vel" to="/rossumo/speed"/>
 </node>
 -->
-<node pkg="rossumo" type="sumo_teleop_joy.py" name="teleop" output="screen">
-  <param name="axis_linear" value="1"/>
-  <param name="axis_angular" value="0"/>
-  <param name="scale_linear" value="100"/>
-  <param name="scale_angular" value="0.05"/>
-  <remap from="/cmd_vel" to="/rossumo1/cmd_vel"/>
-</node>
+<group ns="rossumo1">
+  <node pkg="rossumo" type="sumo_teleop_joy.py" name="teleop" output="screen">
+    <param name="axis_linear" value="1"/>
+    <param name="axis_angular" value="2"/>
+    <param name="scale_linear" value="100"/>
+    <param name="scale_angular" value="0.05"/>
+  </node>
+</group>
 </launch>

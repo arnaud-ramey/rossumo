@@ -1,5 +1,7 @@
 <launch>
-<node pkg="rossumo" type="rossumo.exe" name="rossumo1" required="true" output="screen"
-      args=""
-/>
+<group ns="rossumo1">
+  <node pkg="rossumo" type="rossumo.exe" name="rossumo1" required="true" output="screen"
+        args=""
+  />
+</group>
 </launch>
