@@ -22,7 +22,7 @@
     <param name="axis_linear" value="1"/>
     <param name="axis_angular" value="2"/>
     <param name="scale_linear" value="100"/>
-    <param name="scale_angular" value="0.05"/>
+    <param name="scale_angular" value="30"/>
   </node>
 </group>
 </launch>

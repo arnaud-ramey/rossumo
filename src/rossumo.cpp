@@ -45,13 +45,20 @@ public:
   ~RosSumo() { delete _it; }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  void spinOnce() {
+    if (_rgb_pub.getNumSubscribers())
+      enable_pic_decoding();
+    else
+      disable_pic_decoding();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 protected:
   //////////////////////////////////////////////////////////////////////////////
 
   //! callback called when a new image is received
   virtual void imageChanged () {
-    if (!_rgb_pub.getNumSubscribers())
-      return;
     get_pic(_rgb.image);
     if (_rgb.image.empty())
       printf("pic empty!\n");
@@ -78,7 +85,7 @@ protected:
 
   virtual void batteryStateChanged (uint8_t percent) {
     printf("batteryStateChanged(%i%%)\n", percent);
-    _nh_private.setParam("battery_percentage", percent);
+    _nh_public.setParam("battery_percentage", percent);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -98,6 +105,11 @@ int main (int argc, char **argv) {
   RosSumo sumo;
   if (!sumo.connect())
     exit(-1);
-  ros::spin();
+  ros::Rate rate(100);
+  while (ros::ok()) {
+    sumo.spinOnce();
+    ros::spinOnce();
+    rate.sleep();
+  }
   return EXIT_SUCCESS;
 } // end main()

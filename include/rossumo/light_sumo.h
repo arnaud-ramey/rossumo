@@ -35,16 +35,28 @@ extern "C" {
 #include <libARDiscovery/ARDiscovery.h>
 }
 
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
 #include <boost/thread/mutex.hpp>
+
+#include "controller_key2string.h"
 
 #define TAG "rossumo"
 #define JS_IP_ADDRESS "192.168.2.1"
 #define JS_DISCOVERY_PORT 44444
 
+#define CHECK_ERROR(errorController) { \
+  if (errorController != ARCONTROLLER_OK) { \
+  ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%", ARCONTROLLER_Error_ToString(errorController)); \
+  printf("Fail at line %i\n", __LINE__); \
+  return false; \
+  } \
+  }
+
 class LightSumo {
 public:
-  LightSumo() {}
+  LightSumo() {
+    // all initializations done in connect()
+  }
 
   ~LightSumo() {
     // we are here because of a disconnection or user has quit IHM, so safely delete everything
@@ -73,9 +85,22 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void set_speeds(double v, double w) {
-    errorController = js()->setPilotingPCMDFlag     (js(), 1);
-    errorController = js()->setPilotingPCMDSpeed    (js(), v); // @param speed Speed value [-100:100]
-    errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
+    //printf("set_speeds(%i, %i)\n", v, w);
+    //    errorController = js()->setPilotingPCMDFlag     (js(), 1);
+    //    errorController = js()->setPilotingPCMDSpeed    (js(), v); // @param speed Speed value [-100:100]
+    //    errorController = js()->setPilotingPCMDTurn     (js(), w); // @param turn Turn value. [-100:100]
+    errorController = js()->setPilotingPCMD(js(), 1, v, w);
+    //errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
+  }
+
+  void set_posture_standing() {
+    errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING);
+  }
+  void set_posture_jumper() {
+    errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_JUMPER);
+  }
+  void set_posture_kicker() {
+    errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_KICKER);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -93,6 +118,8 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
 
+  inline void  enable_pic_decoding() { _pix_decoding_enabled = true; }
+  inline void disable_pic_decoding() { _pix_decoding_enabled = false; }
   inline void get_pic(cv::Mat& out) {
     pic_mutex.lock();
     pic.copyTo(out);
@@ -108,6 +135,7 @@ public:
     errorController = ARCONTROLLER_OK;
     deviceState = ARCONTROLLER_DEVICE_STATE_MAX;
     pic_idx = -1;
+    enable_pic_decoding();
     ARSAL_Sem_Init (&(stateSem), 0, 0);
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "-- Jumping Sumo Piloting --");
 
@@ -161,19 +189,16 @@ public:
     // add the frame received callback to be informed when a streaming frame has been received from the device
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set Video callback ... ");
     errorController = ARCONTROLLER_Device_SetVideoStreamCallbacks (deviceController, decoderConfigCallback, didReceiveFrameCallback, NULL , this);
-    if (errorController != ARCONTROLLER_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%", ARCONTROLLER_Error_ToString(errorController));
-      printf("Fail at line %i\n", __LINE__);
-      return false;
-    }
+    CHECK_ERROR(errorController);
 
+    // connection
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "Connecting ...");
     errorController = ARCONTROLLER_Device_Start (deviceController);
-    if (errorController != ARCONTROLLER_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(errorController));
-      printf("Fail at line %i\n", __LINE__);
-      return false;
-    }
+    CHECK_ERROR(errorController);
+
+    // add the speed callback
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
+    ARCOMMANDS_Decoder_SetJumpingSumoPilotingStateSpeedChangedCallback(speedChangedCb, this);
 
     // wait state update update
     ARSAL_Sem_Wait (&(stateSem));
@@ -189,11 +214,7 @@ public:
     // send the command that tells to the Jumping to begin its streaming
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- send StreamingVideoEnable ... ");
     errorController = js()->sendMediaStreamingVideoEnable (js(), 1);
-    if (errorController != ARCONTROLLER_OK) {
-      ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(errorController));
-      printf("Fail at line %i\n", __LINE__);
-      return false;
-    }
+    CHECK_ERROR(errorController);
     return true;
   } // end connect()
 
@@ -203,6 +224,13 @@ protected:
 
   inline ARCONTROLLER_FEATURE_JumpingSumo_t* js() {
     return deviceController->jumpingSumo;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  static void speedChangedCb (int8_t speed, int16_t realSpeed, void *customData) {
+      printf("speedChangedCb(speed:%i, realSpeed:%i)\n", speed, realSpeed);
+      LightSumo* this_ptr = (LightSumo*) customData;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -250,13 +278,19 @@ protected:
                                ARCONTROLLER_DICTIONARY_ELEMENT_t *elementDictionary,
                                void *customData)
   {
-    printf("commandReceived(%i)\n", commandKey);
+    printf("commandReceived(%i = '%s')\n", commandKey, controller_key2string(commandKey));
     LightSumo* this_ptr = (LightSumo*) customData;
     ARCONTROLLER_Device_t *deviceController = this_ptr->deviceController;
     //eARCONTROLLER_ERROR error = ARCONTROLLER_OK;
 
     if (deviceController == NULL)
       return;
+
+    // if the command received is a battery state changed
+    if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_SPEEDCHANGED)
+    {
+      printf("Speed changed!\n");
+    }
     // if the command received is a battery state changed
     if (commandKey == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED)
     {
@@ -292,12 +326,14 @@ protected:
   {
     //ROS_INFO_THROTTLE(1, "didReceiveFrameCallback(%i)", frame->used);
     LightSumo* this_ptr = (LightSumo*) customData;
-    std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
-    this_ptr->pic_mutex.lock();
-    this_ptr->pic = cv::imdecode(cv::Mat (ans_vector), -1);
-    this_ptr->pic_idx++;
-    this_ptr->pic_mutex.unlock();
-    this_ptr->imageChanged();
+    if (this_ptr->_pix_decoding_enabled) {
+      std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
+      this_ptr->pic_mutex.lock();
+      this_ptr->pic = cv::imdecode(cv::Mat (ans_vector), -1);
+      this_ptr->pic_idx++;
+      this_ptr->pic_mutex.unlock();
+      this_ptr->imageChanged();
+    }
     return ARCONTROLLER_OK;
   } // end didReceiveFrameCallback()
 
@@ -310,6 +346,7 @@ protected:
   eARCONTROLLER_ERROR errorController;
   eARCONTROLLER_DEVICE_STATE deviceState;
   cv::Mat pic;
+  bool _pix_decoding_enabled;
   unsigned int pic_idx;
   boost::mutex pic_mutex;
 }; // end class LightSumo

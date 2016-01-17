@@ -30,6 +30,7 @@ int main (/*int argc, char **argv*/) {
   if (!sumo.connect())
     exit(-1);
   cv::Mat rgb;
+  double v = 50, w = 10;
 
   unsigned int last_pix_idx = -1;
   while(true) {
@@ -44,18 +45,18 @@ int main (/*int argc, char **argv*/) {
     }
     char c = cv::waitKey(50);
     // Commands in Sources/ARCONTROLLER_Feature.h - line 1405
-    if (c == 'i')  // go forward
-      sumo.set_speeds(50, 0);
+    if (c == 'i')  // go forwardS
+      sumo.set_speeds(v, 0);
     else if (c == 'u')  // go diagonal
-      sumo.set_speeds(50, -0.05);
+      sumo.set_speeds(v, -w);
     else if (c == 'o') // go diagonal
-      sumo.set_speeds(50, 0.05);
+      sumo.set_speeds(v, w);
     else if (c == 'k')  // go backwards
-      sumo.set_speeds(-50, 0);
+      sumo.set_speeds(-v, 0);
     else if (c == 'j')  // turn left on place
-      sumo.set_speeds(0, -0.05);
+      sumo.set_speeds(0, -w);
     else if (c == 'l')  // turn left on place
-      sumo.set_speeds(0, 0.05);
+      sumo.set_speeds(0, w);
     else if (c == ' ')
       sumo.high_jump();
     else if (c == 'q' || c == 27)  //ESC

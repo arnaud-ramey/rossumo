@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp roslib cv_bridge image_transport 
 SET(ARDRONESDK3_PATH /home/arnaud/sumo/out/Unix-base/staging/usr)
 include_directories(${ARDRONESDK3_PATH}/include)
 link_directories(${ARDRONESDK3_PATH}/lib/)
-set(ARDRONESDK3_LIBRARIES  arsal  arcontroller  ardiscovery)
+set(ARDRONESDK3_LIBRARIES  arcommands  arcontroller  ardiscovery  arsal)
 # other libs
 find_package(OpenCV REQUIRED)
 ### 4 - Message/Service/Action Generators (add_message_files(), add_service_files(), add_action_files())

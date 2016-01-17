@@ -9,6 +9,7 @@ target_link_libraries(light_sumo_test.exe
 add_executable(rossumo.exe
   rossumo.cpp
   ../include/rossumo/light_sumo.h
+  ../scripts/sumo_teleop_joy.py
 )
 target_link_libraries(rossumo.exe
   ${catkin_LIBRARIES} ${ARDRONESDK3_LIBRARIES} ${OpenCV_LIBRARIES}
