@@ -59,6 +59,12 @@ int main (/*int argc, char **argv*/) {
       sumo.set_speeds(0, w);
     else if (c == ' ')
       sumo.high_jump();
+    else if (c == 'p') {
+      if (rand()%2)
+      sumo.set_posture_jumper();
+      else
+        sumo.set_posture_kicker();
+    }
     else if (c == 'q' || c == 27)  //ESC
       break;
     else  // stop robot

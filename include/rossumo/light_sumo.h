@@ -93,6 +93,11 @@ public:
     //errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  /// postures
+  //////////////////////////////////////////////////////////////////////////////
+
+  inline unsigned int get_posture() const { return _posture; }
   void set_posture_standing() {
     errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING);
   }
@@ -104,18 +109,50 @@ public:
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  /// jumps
+  //////////////////////////////////////////////////////////////////////////////
 
   void high_jump() {
     errorController = js()->sendAnimationsJump (js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_JUMP_TYPE_HIGH);
   }
-
-
-  //////////////////////////////////////////////////////////////////////////////
-
   void long_jump() {
     errorController = js()->sendAnimationsJump (js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_JUMP_TYPE_LONG);
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  /// animations
+  //////////////////////////////////////////////////////////////////////////////
+
+  inline void anim_spin() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIN);
+  }
+  inline void anim_tap() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_TAP);
+  }
+  inline void anim_slowshake() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLOWSHAKE);
+  }
+  inline void anim_metronome() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_METRONOME);
+  }
+  inline void anim_ondulation() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_ONDULATION);
+  }
+  inline void anim_spinJump() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINJUMP);
+  }
+  inline void anim_spinToPosture() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINTOPOSTURE);
+  }
+  inline void anim_spiral() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIRAL);
+  }
+  inline void anim_slalom() {
+    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLALOM);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// pictures from the camera
   //////////////////////////////////////////////////////////////////////////////
 
   inline void  enable_pic_decoding() { _pix_decoding_enabled = true; }
@@ -130,6 +167,10 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool connect() {
+    // add the speed callback
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
+    ARCOMMANDS_Decoder_SetJumpingSumoPilotingStateSpeedChangedCallback(speedChangedCb, this);
+
     device = NULL;
     deviceController = NULL;
     errorController = ARCONTROLLER_OK;
@@ -196,10 +237,6 @@ public:
     errorController = ARCONTROLLER_Device_Start (deviceController);
     CHECK_ERROR(errorController);
 
-    // add the speed callback
-    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
-    ARCOMMANDS_Decoder_SetJumpingSumoPilotingStateSpeedChangedCallback(speedChangedCb, this);
-
     // wait state update update
     ARSAL_Sem_Wait (&(stateSem));
 
@@ -229,8 +266,8 @@ protected:
   ////////////////////////////////////////////////////////////////////////////////
 
   static void speedChangedCb (int8_t speed, int16_t realSpeed, void *customData) {
-      printf("speedChangedCb(speed:%i, realSpeed:%i)\n", speed, realSpeed);
-      LightSumo* this_ptr = (LightSumo*) customData;
+    printf("speedChangedCb(speed:%i, realSpeed:%i)\n", speed, realSpeed);
+    //LightSumo* this_ptr = (LightSumo*) customData;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +297,13 @@ protected:
 
   ////////////////////////////////////////////////////////////////////////////////
 
+  //! callback of posture
+  virtual void postureChanged (uint8_t posture) {
+    printf("postureChanged(%i)\n", posture);
+    _posture = posture;
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+
   //! callback of changing of battery level
   virtual void batteryStateChanged (uint8_t percent) {
     printf("batteryStateChanged(%i)\n", percent);
@@ -270,6 +314,27 @@ protected:
   //! callback called when a new image is received
   virtual void imageChanged () {
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  static inline bool safe_get_arg(ARCONTROLLER_DICTIONARY_ELEMENT_t *elementDictionary,
+                                  const char* key,
+                                  unsigned int & value) {
+    if (elementDictionary == NULL)
+      return false;
+    // get the command received in the device controller
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *singleElement = NULL;
+    HASH_FIND_STR (elementDictionary, ARCONTROLLER_DICTIONARY_SINGLE_KEY, singleElement);
+    if (singleElement == NULL)
+      return false;
+    // get the value
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = NULL;
+    HASH_FIND_STR (singleElement->arguments, key, arg);
+    if (arg == NULL)
+      return false;
+    value = arg->value.U8;
+    return true;
+  } // end safe_get_arg()
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -285,30 +350,24 @@ protected:
 
     if (deviceController == NULL)
       return;
+    unsigned int val = 0;
 
-    // if the command received is a battery state changed
+    // speed change
     if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_SPEEDCHANGED)
-    {
       printf("Speed changed!\n");
-    }
-    // if the command received is a battery state changed
-    if (commandKey == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED)
-    {
-      if (elementDictionary == NULL)
-        return;
-      // get the command received in the device controller
-      ARCONTROLLER_DICTIONARY_ELEMENT_t *singleElement = NULL;
-      HASH_FIND_STR (elementDictionary, ARCONTROLLER_DICTIONARY_SINGLE_KEY, singleElement);
-      if (singleElement == NULL)
-        return;
-      // get the value
-      ARCONTROLLER_DICTIONARY_ARG_t *arg = NULL;
-      HASH_FIND_STR (singleElement->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED_PERCENT, arg);
-      if (arg == NULL)
-        return;
-      // update UI
-      this_ptr->batteryStateChanged (arg->value.U8);
-    }
+    // posture
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_POSTURECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_POSTURECHANGED_STATE, val))
+      this_ptr->postureChanged(val);
+    // battery
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED_PERCENT, val))
+      this_ptr->batteryStateChanged (val);
+    // TODO
+    // JUMPINGSUMO_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED
+    // JUMPINGSUMO_SPEEDSETTINGSSTATE_OUTDOORCHANGED
+    // JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED
+    // JUMPINGSUMO_NETWORKSTATE_LINKQUALITYCHANGED
   } // end commandReceived();
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -345,6 +404,7 @@ protected:
   ARSAL_Sem_t stateSem;
   eARCONTROLLER_ERROR errorController;
   eARCONTROLLER_DEVICE_STATE deviceState;
+  unsigned int _posture;
   cv::Mat pic;
   bool _pix_decoding_enabled;
   unsigned int pic_idx;

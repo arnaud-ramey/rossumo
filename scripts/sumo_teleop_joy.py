@@ -62,6 +62,7 @@ if __name__ == '__main__':
   axis_linear = rospy.get_param('~axis_linear', 1)
   axis_angular = rospy.get_param('~axis_angular', 2)
   button_high_jump = rospy.get_param('~button_high_jump', 4)
+  button_posture = rospy.get_param('~button_posture', 5)
   scale_linear = rospy.get_param('~scale_linear', 1.0)
   scale_angular = rospy.get_param('~scale_angular', 1.0)
   joy_sub = rospy.Subscriber("/joy", sensor_msgs.msg.Joy, mycallback)
