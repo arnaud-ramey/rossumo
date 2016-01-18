@@ -11,7 +11,6 @@ add_executable(rossumo.exe
   ../include/rossumo/light_sumo.h
   ../include/rossumo/controller_key2string.h
   ../include/rossumo/device_state2string.h
-  ../scripts/sumo_teleop_joy.py
 )
 target_link_libraries(rossumo.exe
   ${catkin_LIBRARIES} ${ARDRONESDK3_LIBRARIES} ${OpenCV_LIBRARIES}
