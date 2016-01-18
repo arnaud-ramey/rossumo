@@ -1,7 +1,7 @@
 <launch>
-<group ns="rossumo1">
-  <node pkg="rossumo" type="rossumo.exe" name="rossumo1" required="true" output="screen"
-        args=""
-  />
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+  <node pkg="rossumo" type="rossumo.exe" name="driver" required="true" output="screen"
+        args=""/>
 </group>
 </launch>

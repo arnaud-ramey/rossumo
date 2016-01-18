@@ -1,4 +1,7 @@
 <launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
 <node pkg="image_view" type="image_view" output="screen" name="rgb_viewer"
-      args="image:=/rossumo1/rgb"/>
+      args="image:=rgb"/>
+</group>
 </launch>

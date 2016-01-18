@@ -38,6 +38,7 @@ extern "C" {
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include "device_state2string.h"
 #include "controller_key2string.h"
 
 #define TAG "rossumo"
@@ -83,14 +84,20 @@ public:
   } // end dtor
 
   //////////////////////////////////////////////////////////////////////////////
+  /// speed and turn
+  //////////////////////////////////////////////////////////////////////////////
 
   void set_speeds(double v, double w) {
     //printf("set_speeds(%i, %i)\n", v, w);
-    //    errorController = js()->setPilotingPCMDFlag     (js(), 1);
-    //    errorController = js()->setPilotingPCMDSpeed    (js(), v); // @param speed Speed value [-100:100]
-    //    errorController = js()->setPilotingPCMDTurn     (js(), w); // @param turn Turn value. [-100:100]
     errorController = js()->setPilotingPCMD(js(), 1, v, w);
-    //errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
+  }
+
+  /*!
+   * \param w in radians
+   */
+  void sharp_turn(double w) {
+    //printf("sharp_turn(%i)\n", w);
+    errorController = js()->sendPilotingAddCapOffset(js(), w); // @param offset Offset value in radians
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -98,14 +105,21 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline unsigned int get_posture() const { return _posture; }
-  void set_posture_standing() {
-    errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING);
+  bool set_posture_standing() {
+    return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING) == ARCONTROLLER_OK);
   }
-  void set_posture_jumper() {
-    errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_JUMPER);
+  bool set_posture_jumper() {
+    return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_JUMPER) == ARCONTROLLER_OK);
   }
-  void set_posture_kicker() {
-    errorController = js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_KICKER);
+  bool set_posture_kicker() {
+    return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_KICKER) == ARCONTROLLER_OK);
+  }
+  bool set_posture(const std::string & p) {
+    if (p == "standing") return set_posture_standing();
+    else if (p == "kicker") return set_posture_kicker();
+    else if (p == "jumper") return set_posture_jumper();
+    ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "unknown posture '%s'", p.c_str());
+    return false;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -159,10 +173,10 @@ public:
   inline void disable_pic_decoding() { _pix_decoding_enabled = false; }
   inline void get_pic(cv::Mat& out) {
     pic_mutex.lock();
-    pic.copyTo(out);
+    _pic.copyTo(out);
     pic_mutex.unlock();
   }
-  inline unsigned int get_pic_idx() const { return pic_idx; }
+  inline unsigned int get_pic_idx() const { return _pic_idx; }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +189,7 @@ public:
     deviceController = NULL;
     errorController = ARCONTROLLER_OK;
     deviceState = ARCONTROLLER_DEVICE_STATE_MAX;
-    pic_idx = -1;
+    _posture = _battery_percentage = _volume = _pic_idx = -1;
     enable_pic_decoding();
     ARSAL_Sem_Init (&(stateSem), 0, 0);
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "-- Jumping Sumo Piloting --");
@@ -191,7 +205,7 @@ public:
       return false;
     }
 
-    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "    - ARDISCOVERY_Device_InitWifi ...");
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "ARDISCOVERY_Device_InitWifi ...");
     // create a JumpingSumo discovery device (ARDISCOVERY_PRODUCT_JS)
     errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_JS, "JS", JS_IP_ADDRESS, JS_DISCOVERY_PORT);
     if (errorDiscovery != ARDISCOVERY_OK) {
@@ -265,7 +279,7 @@ protected:
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  static void speedChangedCb (int8_t speed, int16_t realSpeed, void *customData) {
+  static void speedChangedCb (int8_t speed, int16_t realSpeed, void */*customData*/) {
     printf("speedChangedCb(speed:%i, realSpeed:%i)\n", speed, realSpeed);
     //LightSumo* this_ptr = (LightSumo*) customData;
   }
@@ -274,16 +288,17 @@ protected:
 
   // called when the state of the device controller has changed
   static void stateChanged (eARCONTROLLER_DEVICE_STATE newState, eARCONTROLLER_ERROR /*error*/, void *customData) {
-    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "    - stateChanged newState: %d .....", newState);
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "stateChanged newState: %d='%s' .....",
+                newState, device_state2string(newState));
     LightSumo* this_ptr = (LightSumo*) customData;
 
     switch (newState)
     {
       case ARCONTROLLER_DEVICE_STATE_STOPPED:
         ARSAL_Sem_Post (&(this_ptr->stateSem));
-        //ros::shutdown();
-        exit(-1);
-
+        ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "Trying to reconnect...");
+        sleep(1);
+        this_ptr->connect();
         break;
 
       case ARCONTROLLER_DEVICE_STATE_RUNNING:
@@ -302,14 +317,51 @@ protected:
     printf("postureChanged(%i)\n", posture);
     _posture = posture;
   }
+
   ////////////////////////////////////////////////////////////////////////////////
 
   //! callback of changing of battery level
-  virtual void batteryStateChanged (uint8_t percent) {
-    printf("batteryStateChanged(%i)\n", percent);
+  virtual void batteryChanged (uint8_t battery_percentage) {
+    printf("batteryChanged(%i%%)\n", battery_percentage);
+    _battery_percentage = battery_percentage;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+
+  //! callback of changing of volume level
+  virtual void volumeChanged (uint8_t volume) {
+    printf("volumeChanged(%i)\n", volume);
+    _volume = volume;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  //! callback of changing of alert level
+  virtual void alertChanged (uint8_t alert) {
+    printf("alertChanged(%i)\n", alert);
+//  ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_NONE = 0,    ///< No alert
+//  ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY,    ///< Critical battery alert
+//  ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY,    ///< Low battery alert
+    _alert = alert;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  //! callback of changing of outdoor level
+  virtual void outdoorChanged (uint8_t outdoor) {
+    printf("outdoorChanged(%i)\n", outdoor);
+    _outdoor = outdoor;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  //! callback of changing of link_quality level
+  virtual void link_qualityChanged (uint8_t link_quality) {
+    printf("link_qualityChanged(%i)\n", link_quality);
+    _link_quality = link_quality;
+  }
+
+    ////////////////////////////////////////////////////////////////////////////////
 
   //! callback called when a new image is received
   virtual void imageChanged () {
@@ -362,12 +414,23 @@ protected:
     // battery
     else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED
              && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED_PERCENT, val))
-      this_ptr->batteryStateChanged (val);
-    // TODO
-    // JUMPINGSUMO_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED
-    // JUMPINGSUMO_SPEEDSETTINGSSTATE_OUTDOORCHANGED
-    // JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED
-    // JUMPINGSUMO_NETWORKSTATE_LINKQUALITYCHANGED
+      this_ptr->batteryChanged (val);
+    // volume
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED_VOLUME, val))
+      this_ptr->volumeChanged (val);
+    // link_quality
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_NETWORKSTATE_LINKQUALITYCHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_NETWORKSTATE_LINKQUALITYCHANGED_QUALITY, val))
+      this_ptr->link_qualityChanged (val);
+    // alert
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE, val))
+      this_ptr->alertChanged(val);
+    // outdoor
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_SPEEDSETTINGSSTATE_OUTDOORCHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_SPEEDSETTINGSSTATE_OUTDOORCHANGED_OUTDOOR, val))
+      this_ptr->outdoorChanged (val);
   } // end commandReceived();
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -388,8 +451,8 @@ protected:
     if (this_ptr->_pix_decoding_enabled) {
       std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
       this_ptr->pic_mutex.lock();
-      this_ptr->pic = cv::imdecode(cv::Mat (ans_vector), -1);
-      this_ptr->pic_idx++;
+      this_ptr->_pic = cv::imdecode(cv::Mat (ans_vector), -1);
+      this_ptr->_pic_idx++;
       this_ptr->pic_mutex.unlock();
       this_ptr->imageChanged();
     }
@@ -404,10 +467,10 @@ protected:
   ARSAL_Sem_t stateSem;
   eARCONTROLLER_ERROR errorController;
   eARCONTROLLER_DEVICE_STATE deviceState;
-  unsigned int _posture;
-  cv::Mat pic;
+  unsigned int _posture, _battery_percentage, _volume, _link_quality, _alert, _outdoor;
+  cv::Mat _pic;
   bool _pix_decoding_enabled;
-  unsigned int pic_idx;
+  unsigned int _pic_idx;
   boost::mutex pic_mutex;
 }; // end class LightSumo
 

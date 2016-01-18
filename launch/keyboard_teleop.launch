@@ -1,7 +1,8 @@
 <launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
 <!-- keyboard teleoperation
 https://github.com/turtlebot/turtlebot/blob/indigo/turtlebot_teleop/scripts/turtlebot_teleop_key   -->
-<group ns="rossumo1">
   <node pkg="turtlebot_teleop" type="turtlebot_teleop_key" name="teleop"
         output="screen">
     <param name="scale_linear" value="0.5" type="double"/>

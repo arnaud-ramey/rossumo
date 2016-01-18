@@ -20,10 +20,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 
-\todo Description of the file
+Converts a controller dictionary key (eARCONTROLLER_DICTIONARY_KEY)
+into a human-readable string
 */
-#ifndef DEVICE_STATE2STRING_H
-#define DEVICE_STATE2STRING_H
+#ifndef CONTROLLER_KEY2STRING_H
+#define CONTROLLER_KEY2STRING_H
 
 extern "C" {
 #include <libARController/ARCONTROLLER_Dictionary.h>
@@ -465,5 +466,5 @@ inline const char* controller_key2string(eARCONTROLLER_DICTIONARY_KEY & i) {
   return "UNKOWNN";
 }
 
-#endif // DEVICE_STATE2STRING_H
+#endif // CONTROLLER_KEY2STRING_H
 

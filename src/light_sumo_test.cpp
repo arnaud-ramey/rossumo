@@ -28,7 +28,7 @@ int main (/*int argc, char **argv*/) {
   LightSumo sumo;
   cv::namedWindow("sumo");
   if (!sumo.connect())
-    exit(-1);
+    return -1;
   cv::Mat rgb;
   double v = 50, w = 10;
 

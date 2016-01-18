@@ -65,7 +65,7 @@ if __name__ == '__main__':
   button_posture = rospy.get_param('~button_posture', 5)
   scale_linear = rospy.get_param('~scale_linear', 1.0)
   scale_angular = rospy.get_param('~scale_angular', 1.0)
-  joy_sub = rospy.Subscriber("/joy", sensor_msgs.msg.Joy, mycallback)
+  joy_sub = rospy.Subscriber("joy", sensor_msgs.msg.Joy, mycallback)
   joy_pub = rospy.Publisher("cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
   high_jump_pub = rospy.Publisher("high_jump", std_msgs.msg.Empty, queue_size=1)
   high_jump_before = False

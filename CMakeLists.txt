@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 ### 2- Package Name
 project(rossumo)
+SET(CMAKE_BUILD_TYPE RelWithDebInfo) #None Debug Release RelWithDebInfo MinSizeRel
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra") # add extra warnings
 ### 3 - Find other CMake/Catkin packages needed for build
 find_package(catkin REQUIRED COMPONENTS roscpp roslib cv_bridge image_transport std_msgs)

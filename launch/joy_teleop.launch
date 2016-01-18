@@ -1,28 +1,26 @@
 <launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
 <!--
   Driver for the logitech rumblepad2 joystick.
 
   Use the D pad while pressing and holding the left trigger button (5) to control.
 -->
-<node pkg="joy" type="joy_node" name="joy" output="screen" >
-  <param name="dev" value="/dev/input/js1" />
-  <param name="autorepeat_rate" value="25" />
-</node>
+  <node pkg="joy" type="joy_node" name="joy" output="screen" >
+    <param name="dev" value="/dev/input/js1" />
+    <param name="autorepeat_rate" value="25" />
+  </node>
 
 <!-- https://github.com/turtlebot/turtlebot/blob/indigo/turtlebot_teleop/src/turtlebot_joy.cpp -->
-<!--
-<node pkg="turtlebot_teleop" type="turtlebot_teleop_joy" name="turtlebot_teleop_joystick">
-  <param name="scale_linear" value=".5"/>
-  <param name="scale_angular" value="10"/>
-  <remap from="turtlebot_teleop_joystick/cmd_vel" to="/rossumo/speed"/>
-</node>
--->
-<group ns="rossumo1">
-  <node pkg="rossumo" type="sumo_teleop_joy.py" name="teleop" output="screen">
-    <param name="axis_linear" value="1"/>
-    <param name="axis_angular" value="2"/>
+  <node pkg="rossumo" type="sumo_teleop_joy.exe" name="teleop" output="screen">
+    <param name="axis_linear" value="3"/>
+    <param name="axis_angular" value="0"/>
+    <param name="axis_90turn" value="4"/>
+    <param name="axis_180turn" value="5"/>
     <param name="scale_linear" value="100"/>
     <param name="scale_angular" value="30"/>
+    <param name="button_high_jump" value="4"/>
+    <param name="button_posture" value="5"/>
   </node>
 </group>
 </launch>
