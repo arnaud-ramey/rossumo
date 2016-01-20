@@ -39,6 +39,7 @@ public:
     // create publishers and subscribers
     _it = new image_transport::ImageTransport(_nh_public);
     _cmd_vel_sub = _nh_public.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
+    _anim_sub = _nh_public.subscribe("anim", 1, &RosSumo::anim_cb, this);
     _posture_sub = _nh_public.subscribe("set_posture", 1, &RosSumo::posture_cb, this);
     _sharp_turn_sub = _nh_public.subscribe("sharp_turn", 1, &RosSumo::sharp_turn_cb, this);
     _high_jump_sub = _nh_public.subscribe("high_jump", 1, &RosSumo::high_jump_cb, this);
@@ -74,6 +75,10 @@ protected:
   //////////////////////////////////////////////////////////////////////////////
 
   void posture_cb(const std_msgs::StringConstPtr & msg) { set_posture(msg->data); }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void anim_cb(const std_msgs::StringConstPtr & msg) { anim(msg->data); }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +161,8 @@ protected:
 
   image_transport::ImageTransport* _it;
   image_transport::Publisher _rgb_pub;
-  ros::Subscriber _cmd_vel_sub, _high_jump_sub, _long_jump_sub, _posture_sub, _sharp_turn_sub;
+  ros::Subscriber _cmd_vel_sub, _high_jump_sub, _long_jump_sub, _posture_sub;
+  ros::Subscriber _anim_sub, _sharp_turn_sub;
   ros::Publisher _volume_pub, _battery_percentage_pub, _posture_pub;
   ros::Publisher _link_quality_pub, _alert_pub, _outdoor_pub;
   std_msgs::Float32 _float_msg;

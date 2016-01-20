@@ -137,32 +137,45 @@ public:
   /// animations
   //////////////////////////////////////////////////////////////////////////////
 
-  inline void anim_spin() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIN);
+  inline bool anim_spin() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIN)== ARCONTROLLER_OK);
   }
-  inline void anim_tap() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_TAP);
+  inline bool anim_tap() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_TAP)== ARCONTROLLER_OK);
   }
-  inline void anim_slowshake() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLOWSHAKE);
+  inline bool anim_slowshake() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLOWSHAKE)== ARCONTROLLER_OK);
   }
-  inline void anim_metronome() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_METRONOME);
+  inline bool anim_metronome() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_METRONOME)== ARCONTROLLER_OK);
   }
-  inline void anim_ondulation() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_ONDULATION);
+  inline bool anim_ondulation() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_ONDULATION)== ARCONTROLLER_OK);
   }
-  inline void anim_spinJump() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINJUMP);
+  inline bool anim_spinJump() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINJUMP)== ARCONTROLLER_OK);
   }
-  inline void anim_spinToPosture() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINTOPOSTURE);
+  inline bool anim_spinToPosture() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINTOPOSTURE)== ARCONTROLLER_OK);
   }
-  inline void anim_spiral() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIRAL);
+  inline bool anim_spiral() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIRAL)== ARCONTROLLER_OK);
   }
-  inline void anim_slalom() {
-    js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLALOM);
+  inline bool anim_slalom() {
+    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLALOM)== ARCONTROLLER_OK);
+  }
+  bool anim(const std::string & p) {
+    if (p == "spin") return anim_spin();
+    else if (p == "tap") return anim_tap();
+    else if (p == "slowshake") return anim_slowshake();
+    else if (p == "metronome") return anim_metronome();
+    else if (p == "ondulation") return anim_ondulation();
+    else if (p == "spinJump") return anim_spinJump();
+    else if (p == "spinToPosture") return anim_spinToPosture();
+    else if (p == "spiral") return anim_spiral();
+    else if (p == "slalom") return anim_slalom();
+    ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "unknown anim '%s'", p.c_str());
+    return false;
   }
 
   //////////////////////////////////////////////////////////////////////////////

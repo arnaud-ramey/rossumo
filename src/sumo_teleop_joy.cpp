@@ -30,28 +30,25 @@ A simple node for teleoperating the Sumo
 #include <ros/ros.h>
 
 int axis_linear = 1, axis_angular = 2, axis_90turn = 3, axis_180turn = 4;
-int button_high_jump = 1, button_posture = 2;
+int button_high_jump = 1, button_posture = 2, button_anim = 3;
 double scale_linear = 1.0, scale_angular = 1.0;
 std::string posture = "jumper";
-bool high_jump_before = false, posture_before = false;
+bool high_jump_before = false, posture_before = false, anim_before = false;
 bool axis_90before = false, axis_180before = false;
 std_msgs::String string_msg;
-ros::Publisher posture_pub, cmd_vel_pub, high_jump_pub, sharp_turn_pub;
+ros::Publisher posture_pub, cmd_vel_pub, high_jump_pub, sharp_turn_pub, anim_pub;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
-  geometry_msgs::Twist vel;
-  vel.linear.x = (joy->axes[axis_linear] * scale_linear);
-  vel.angular.z = (joy->axes[axis_angular] * scale_angular);
-  cmd_vel_pub.publish(vel);
-
+  bool command_sent = false;
   // sharp turns at 90°
   bool axis_90now = fabs(joy->axes[axis_90turn]) > 0.9;
   if (axis_90now && !axis_90before) {
     std_msgs::Float32 msg;
     msg.data = (joy->axes[axis_90turn] < 0 ? M_PI_2 : -M_PI_2);
     sharp_turn_pub.publish(msg);
+    command_sent = true;
   }
   axis_90before = axis_90now;
   // sharp turns at 180°
@@ -60,6 +57,7 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
     std_msgs::Float32 msg;
     msg.data = (joy->axes[axis_180turn] > 0 ? 2 * M_PI : -M_PI);
     sharp_turn_pub.publish(msg);
+    command_sent = true;
   }
   axis_180before = axis_180now;
 
@@ -67,6 +65,7 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
   if (joy->buttons[button_high_jump] && !high_jump_before) {
     ROS_INFO("Starting high jump!");
     high_jump_pub.publish(std_msgs::Empty());
+    command_sent = true;
   }
   high_jump_before = joy->buttons[button_high_jump];
 
@@ -77,8 +76,25 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
     else                          posture = "standing";
     string_msg.data = posture;
     posture_pub.publish(string_msg);
+    command_sent = true;
   }
   posture_before = joy->buttons[button_posture];
+
+  // anims
+  if (joy->buttons[button_anim] && !anim_before) {
+    string_msg.data = "tap";
+    anim_pub.publish(string_msg);
+    command_sent = true;
+  }
+  anim_before = joy->buttons[button_anim];
+
+  // if no command was sent till here: move robot with directions of axes
+  if (command_sent)
+    return;
+  geometry_msgs::Twist vel;
+  vel.linear.x = (joy->axes[axis_linear] * scale_linear);
+  vel.angular.z = (joy->axes[axis_angular] * scale_angular);
+  cmd_vel_pub.publish(vel);
 } // end joy_cb();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,20 +103,22 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "sumo_teleop_joy");
   ros::NodeHandle nh_public, nh_private("~");
   // params
-  nh_private.param("axis_linear", axis_linear, axis_linear);
-  nh_private.param("axis_angular", axis_angular, axis_angular);
-  nh_private.param("axis_90turn", axis_90turn, axis_90turn);
   nh_private.param("axis_180turn", axis_180turn, axis_180turn);
-  nh_private.param("scale_linear", scale_linear, scale_linear);
-  nh_private.param("scale_angular", scale_angular, scale_angular);
+  nh_private.param("axis_90turn", axis_90turn, axis_90turn);
+  nh_private.param("axis_angular", axis_angular, axis_angular);
+  nh_private.param("axis_linear", axis_linear, axis_linear);
+  nh_private.param("button_anim", button_anim, button_anim);
   nh_private.param("button_high_jump", button_high_jump, button_high_jump);
   nh_private.param("button_posture", button_posture, button_posture);
+  nh_private.param("scale_angular", scale_angular, scale_angular);
+  nh_private.param("scale_linear", scale_linear, scale_linear);
   // subscribers
   ros::Subscriber joy_sub = nh_public.subscribe<sensor_msgs::Joy>("joy", 1,  joy_cb);
   // publishers
-  posture_pub = nh_public.advertise<std_msgs::String>("set_posture", 1);
-  high_jump_pub = nh_public.advertise<std_msgs::Empty>("high_jump", 1);
+  anim_pub = nh_public.advertise<std_msgs::String>("anim", 1);
   cmd_vel_pub = nh_public.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+  high_jump_pub = nh_public.advertise<std_msgs::Empty>("high_jump", 1);
+  posture_pub = nh_public.advertise<std_msgs::String>("set_posture", 1);
   sharp_turn_pub = nh_public.advertise<std_msgs::Float32>("sharp_turn", 1);
   ros::spin();
   return 0;
