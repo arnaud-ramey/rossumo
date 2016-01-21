@@ -19,6 +19,70 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
+\section Parameters
+  None.
+
+\section Subscriptions
+  - \b "cmd_vel"
+    [geometry_msgs::Twist, (m/s, rad/s)]
+    The instantaneous speed order.
+    Send it every 10 Hz to obtain continuous
+
+  - \b "anim"
+    [std_msgs::String]
+    Play one of the predefined animations,
+    among "metronome", "ondulation", "slalom" "slowshake", "spin",
+          "spinJump", "spinToPosture", "spiral", "tap".
+
+  - \b "set_posture"
+    [std_msgs::String]
+    Play one of the predefined postures,
+    among "standing", "kicker", "jumper".
+
+  - \b "sharp_turn"
+    [std_msgs::Float32, radians]
+    Make a on-the-spot turn.
+    Positive angles generate CCW turns.
+
+  - \b "high_jump"
+    [std_msgs::Empty]
+    Perform a high jump (about 80 cm high).
+
+  - \b "long_jump"
+    [std_msgs::Empty]
+    Perform a long jump (about 80 cm long).
+
+\section Publications
+  - \b "rgb"
+    [sensor_msgs::Image]
+    The 640x480 RGB image, encoded as "bgr8".
+    The framerate is roughly 15 fps.
+    The image comes from the MJPEG video stream of the robot
+    and is not decoded if there is no subscriber to the topic.
+
+  - \b "battery_percentage"
+    [std_msgs::Int16, 0~100]
+    The percentage of remaining battery.
+
+  - \b "posture"
+    [std_msgs::String]
+    The current predefined posture
+    among "unknown", "standing", "kicker", "jumper".
+
+  - \b "link_quality"
+    [std_msgs::Int16, 0~5]
+    Quality of the Wifi connection,
+    between 0 (very bad) and 5 (very good).
+
+  - \b "alert"
+    [std_msgs::String]
+    The alerts emitted by the robot.
+    Current they only concern the battery level,
+    among "unkwnown", "none", "low_battery", "critical_battery"
+
+  - \b "outdoor"
+    [std_msgs::Int16]
+    TODO
  */
 #include <rossumo/light_sumo.h>
 #include <ros/ros.h>
@@ -36,7 +100,7 @@ public:
     // initial data
     _rgb.encoding = "bgr8";
     _rgb.header.frame_id = "sumo_camera_frame";
-    // create publishers and subscribers
+    // create publishers
     _it = new image_transport::ImageTransport(_nh_public);
     _cmd_vel_sub = _nh_public.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
     _anim_sub = _nh_public.subscribe("anim", 1, &RosSumo::anim_cb, this);
@@ -44,11 +108,12 @@ public:
     _sharp_turn_sub = _nh_public.subscribe("sharp_turn", 1, &RosSumo::sharp_turn_cb, this);
     _high_jump_sub = _nh_public.subscribe("high_jump", 1, &RosSumo::high_jump_cb, this);
     _long_jump_sub = _nh_public.subscribe("long_jump", 1, &RosSumo::long_jump_cb, this);
+    // create subscribers
     _rgb_pub = _it->advertise("rgb", 1);
     _battery_percentage_pub = _nh_public.advertise<std_msgs::Int16>("battery_percentage", 1);
-    _posture_pub = _nh_public.advertise<std_msgs::Int16>("posture", 1);
+    _posture_pub = _nh_public.advertise<std_msgs::String>("posture", 1);
     _link_quality_pub = _nh_public.advertise<std_msgs::Int16>("link_quality", 1);
-    _alert_pub = _nh_public.advertise<std_msgs::Int16>("alert", 1);
+    _alert_pub = _nh_public.advertise<std_msgs::String>("alert", 1);
     _outdoor_pub = _nh_public.advertise<std_msgs::Int16>("outdoor", 1);
   }
 
@@ -116,9 +181,9 @@ protected:
 
   virtual void postureChanged (uint8_t posture) {
     LightSumo::postureChanged(posture);
-    _int_msg.data = posture;
-    _posture_pub.publish(_int_msg);
-    _nh_public.setParam("posture", posture);
+    _string_msg.data = get_posture2str();
+    _posture_pub.publish(_string_msg);
+    _nh_public.setParam("posture", _string_msg.data);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -134,9 +199,9 @@ protected:
 
   virtual void alertChanged (uint8_t alert) {
     LightSumo::alertChanged(alert);
-    _int_msg.data = alert;
-    _alert_pub.publish(_int_msg);
-    _nh_public.setParam("alert", alert);
+    _string_msg.data = get_alert2str();
+    _alert_pub.publish(_string_msg);
+    _nh_public.setParam("alert", _string_msg.data);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -167,6 +232,7 @@ protected:
   ros::Publisher _link_quality_pub, _alert_pub, _outdoor_pub;
   std_msgs::Float32 _float_msg;
   std_msgs::Int16 _int_msg;
+  std_msgs::String _string_msg;
   ros::NodeHandle _nh_public, _nh_private;
   cv_bridge::CvImage _rgb;
 }; // end class RosSumo

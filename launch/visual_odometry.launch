@@ -3,6 +3,8 @@
 <group ns="$(arg robot)">
   <!--
   Camera calibration:
+  http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration
+  http://wiki.ros.org/camera_calibration
   $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
 
   To record a bag from RGB video stream:

@@ -25,7 +25,7 @@ ________________________________________________________________________________
 
   The available functions in the SDK are in include/libARController/ARCONTROLLER_Feature.h
   from line 1156.
- */
+*/
 #ifndef LIGHT_SUMO_H
 #define LIGHT_SUMO_H
 
@@ -105,6 +105,19 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline unsigned int get_posture() const { return _posture; }
+  inline std::string get_posture2str() const {
+    switch (_posture) {
+      case ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING:
+        return "standing";
+      case ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_JUMPER:
+        return "kicker";
+      case ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_KICKER:
+        return "jumper";
+      default:
+        break;
+    }
+    return "unknown";
+  }
   bool set_posture_standing() {
     return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING) == ARCONTROLLER_OK);
   }
@@ -352,10 +365,20 @@ protected:
   //! callback of changing of alert level
   virtual void alertChanged (uint8_t alert) {
     printf("alertChanged(%i)\n", alert);
-//  ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_NONE = 0,    ///< No alert
-//  ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY,    ///< Critical battery alert
-//  ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY,    ///< Low battery alert
     _alert = alert;
+  }
+  inline std::string get_alert2str() const {
+    switch (_alert) {
+      case ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_NONE:
+        return "none";
+      case ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+        return "critical_battery";
+      case ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+        return "low_battery";
+      default:
+        break;
+    }
+    return "unknown";
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -374,7 +397,7 @@ protected:
     _link_quality = link_quality;
   }
 
-    ////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
   //! callback called when a new image is received
   virtual void imageChanged () {
