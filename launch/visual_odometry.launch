@@ -2,12 +2,6 @@
 <arg name="robot" default="rossumo1" />
 <group ns="$(arg robot)">
   <!--
-  Camera calibration:
-  http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration
-  http://wiki.ros.org/camera_calibration
-  $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
-  Output: cf data/calibrationdata.tar.gz/ost.txt
-
   To record a bag from RGB video stream:
   $ rosbag record /rossumo1/cmd_vel /rossumo1/rgb
 
@@ -26,16 +20,23 @@
 <!--
 $ git clone https://github.com/srv/srv_tools.git
 -->
+<!--
   <remap from="camera/image_color" to="rgb"/>
   <remap from="camera/camera_info" to="camera_info"/>
   <node name="img_pub" pkg="bag_tools" type="image_sequence_publisher.py" output="screen" respawn="true">
     <param name="image_dir" value="/home/arnaud/sumo/bags"/>
     <param name="file_pattern" value="*.jpg"/>
-    <param name="camera_info_file" value="/home/arnaud/catkin_ws/src/rossumo/data/sumo_camera_parameters.yaml"/>
+    <param name="camera_info_file" value="$(find rossumo)/data/sumo_camera_parameters.yaml"/>
     <param name="frequency" value="15"/>
   </node>
+-->
 
-  <!-- http://wiki.ros.org/tf -->
+  <!-- rectify image
+    http://wiki.ros.org/image_proc -->
+  <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc"/>
+
+  <!-- static transform base_link => camera
+    http://wiki.ros.org/tf -->
   <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster"
         args=".03 0 -.03  -1.57 0 -1.57 /base_link /camera 100" />
 

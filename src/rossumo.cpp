@@ -20,7 +20,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 \section Parameters
-  None.
+  - \b "camera_calibration_filename"
+    [std::string, default: ""]
+    If not empty, the path to the calibration file of the camera.
+    For instance, "$(find rossumo)/data/sumo_camera_parameters.yaml"
+
+  - \b "camera_calibration_camname"
+    [std::string, default: "camname"]
+    Name of the camera in the calibration file of the camera.
+    For instance, "$(find rossumo)/data/sumo_camera_parameters.yaml"
 
 \section Subscriptions
   - \b "cmd_vel"
@@ -60,6 +68,10 @@ ________________________________________________________________________________
     The image comes from the MJPEG video stream of the robot
     and is not decoded if there is no subscriber to the topic.
 
+  - \b "camera_info"
+    [sensor_msgs::CameraInfo]
+    The camera_info read from a calibration file.
+
   - \b "battery_percentage"
     [std_msgs::Int16, 0~100]
     The percentage of remaining battery.
@@ -93,6 +105,7 @@ ________________________________________________________________________________
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/String.h>
+#include <camera_calibration_parsers/parse.h>
 
 class RosSumo : public LightSumo {
 public:
@@ -100,6 +113,22 @@ public:
     // initial data
     _rgb.encoding = "bgr8";
     _rgb.header.frame_id = "sumo_camera_frame";
+    _caminfo.header = _rgb.header;
+    // read params
+    std::string cal_filename = "", cal_camname = "camname";
+    _caminfo_read = false;
+    _nh_private.param("camera_calibration_filename", cal_filename, cal_filename);
+    _nh_private.param("camera_calibration_camname", cal_camname, cal_camname);
+    if (!cal_filename.empty()) {
+      _caminfo_read = camera_calibration_parsers::readCalibration
+                      (cal_filename, cal_camname, _caminfo);
+      if (!_caminfo_read)
+        ROS_WARN("Could not read camera '%s' in camera_calibration file '%s'",
+                 cal_camname.c_str(), cal_filename.c_str());
+      else
+        ROS_INFO("Succesfully read camera '%s' in camera_calibration file '%s'",
+                 cal_camname.c_str(), cal_filename.c_str());
+    }
     // create publishers
     _it = new image_transport::ImageTransport(_nh_public);
     _cmd_vel_sub = _nh_public.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
@@ -110,6 +139,7 @@ public:
     _long_jump_sub = _nh_public.subscribe("long_jump", 1, &RosSumo::long_jump_cb, this);
     // create subscribers
     _rgb_pub = _it->advertise("rgb", 1);
+    _caminfo_pub = _nh_public.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
     _battery_percentage_pub = _nh_public.advertise<std_msgs::Int16>("battery_percentage", 1);
     _posture_pub = _nh_public.advertise<std_msgs::String>("posture", 1);
     _link_quality_pub = _nh_public.advertise<std_msgs::Int16>("link_quality", 1);
@@ -159,13 +189,15 @@ protected:
   //! callback called when a new image is received
   virtual void imageChanged () {
     get_pic(_rgb.image);
-    if (_rgb.image.empty())
+    if (_rgb.image.empty()) {
       printf("pic empty!\n");
-    else {
-      // publish pic
-      _rgb.header.stamp = ros::Time::now();
-      _rgb_pub.publish(_rgb.toImageMsg());
+      return;
     }
+    // publish pic
+    _rgb.header.stamp = ros::Time::now();
+    _rgb_pub.publish(_rgb.toImageMsg());
+    _caminfo.header.stamp  = _rgb.header.stamp;
+    _caminfo_pub.publish(_caminfo);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -228,12 +260,14 @@ protected:
   image_transport::Publisher _rgb_pub;
   ros::Subscriber _cmd_vel_sub, _high_jump_sub, _long_jump_sub, _posture_sub;
   ros::Subscriber _anim_sub, _sharp_turn_sub;
-  ros::Publisher _volume_pub, _battery_percentage_pub, _posture_pub;
+  ros::Publisher _caminfo_pub, _volume_pub, _battery_percentage_pub, _posture_pub;
   ros::Publisher _link_quality_pub, _alert_pub, _outdoor_pub;
   std_msgs::Float32 _float_msg;
   std_msgs::Int16 _int_msg;
   std_msgs::String _string_msg;
   ros::NodeHandle _nh_public, _nh_private;
+  sensor_msgs::CameraInfo _caminfo;
+  bool _caminfo_read;
   cv_bridge::CvImage _rgb;
 }; // end class RosSumo
 

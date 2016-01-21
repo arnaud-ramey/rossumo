@@ -9,49 +9,57 @@ Description
 It relies on [ARDroneSDK3](http://developer.parrot.com/docs/bebop/?c#general-information),
 the official Parrot DSK.
 
+
 Supported hardware
 ==================
 
 The library was developed for the original Parrot Jumping Sumo.
 However, it should be compatible with the newer versions.
 
+
 Licence
 =======
 
 See LICENCE
+
 
 Usage
 =====
 
 See `launch/rossumo.launch` for an example of usage.
 
+
 Install
 =======
 
 You first need to install the official SDK (ARDrone3) by Parrot.
 
-Dependencies
-------------
+
+## Dependencies
+
 ```c++
 $ sudo apt-get install phablet-tools autoconf
 ```
 
-Download ARDroneSDK3
---------------------
+
+## Download ARDroneSDK3
+
 Following [the instructions](http://developer.parrot.com/docs/bebop/?c#download-all-sources):
 ```c++
 $ repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
 $ repo sync
 ```
 
-Build ARDroneSDK3
------------------
+
+## Build ARDroneSDK3
+
 ```c++
 $ ./build.sh -p Unix-forall -t build-sdk -j
 ```
 
-Build ARDroneSDK3 samples
--------------------------
+
+## Build ARDroneSDK3 samples
+
 ```c++
 $ git clone https://github.com/Parrot-Developers/Samples.git
 $ cd Samples/Unix/JumpingSumoPiloting
@@ -67,9 +75,21 @@ $ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/l
 $ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
 ```
 
-Build rossumo
--------------
+
+## Build rossumo
+
 ```c++
 $ catkin_make --only-pkg-with-deps rossumo
+```
+
+
+## Camera calibration
+
+Following the instructions of camera_calibration
+[wiki page](http://wiki.ros.org/camera_calibration) and
+[tutorial](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration) :
+
+```c++
+$ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
 ```
 

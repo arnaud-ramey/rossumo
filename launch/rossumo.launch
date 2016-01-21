@@ -1,7 +1,9 @@
 <launch>
 <arg name="robot" default="rossumo1" />
 <group ns="$(arg robot)">
-  <node pkg="rossumo" type="rossumo.exe" name="driver" required="true" output="screen"
-        args=""/>
+  <node pkg="rossumo" type="rossumo.exe" name="driver" required="true" output="screen">
+    <param name="camera_calibration_filename" value="$(find rossumo)/data/sumo_camera_parameters.yaml"/>
+    <param name="camera_calibration_camname" value="head_camera"/>
+  </node>
 </group>
 </launch>
