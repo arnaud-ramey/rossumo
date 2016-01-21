@@ -32,27 +32,27 @@ You first need to install the official SDK (ARDrone3) by Parrot.
 
 Dependencies
 ------------
-``` c++
+```c++
 $ sudo apt-get install phablet-tools autoconf
 ```
 
 Download ARDroneSDK3
 --------------------
 Following [the instructions](http://developer.parrot.com/docs/bebop/?c#download-all-sources):
-``` c++
+```c++
 $ repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
 $ repo sync
 ```
 
 Build ARDroneSDK3
 -----------------
-``` c++
+```c++
 $ ./build.sh -p Unix-forall -t build-sdk -j
 ```
 
 Build ARDroneSDK3 samples
 -------------------------
-``` c++
+```c++
 $ git clone https://github.com/Parrot-Developers/Samples.git
 $ cd Samples/Unix/JumpingSumoPiloting
 ```
@@ -62,13 +62,13 @@ $ cd Samples/Unix/JumpingSumoPiloting
     LDIR = $(SDK_DIR)/lib/
     <check the different -L flags>
     <add json to libs>
-``` c++
+```c++
 $ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
 $ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
 ```
 
 Build rossumo
 -------------
-``` c++
+```c++
 $ catkin_make --only-pkg-with-deps rossumo
 ```
