@@ -61,14 +61,14 @@ ________________________________________________________________________________
     Perform a long jump (about 80 cm long).
 
 \section Publications
-  - \b "rgb"
+  - \b "camera/image_raw"
     [sensor_msgs::Image]
     The 640x480 RGB image, encoded as "bgr8".
     The framerate is roughly 15 fps.
     The image comes from the MJPEG video stream of the robot
     and is not decoded if there is no subscriber to the topic.
 
-  - \b "camera_info"
+  - \b "camera/camera_info"
     [sensor_msgs::CameraInfo]
     The camera_info read from a calibration file.
 
@@ -138,8 +138,8 @@ public:
     _high_jump_sub = _nh_public.subscribe("high_jump", 1, &RosSumo::high_jump_cb, this);
     _long_jump_sub = _nh_public.subscribe("long_jump", 1, &RosSumo::long_jump_cb, this);
     // create subscribers
-    _rgb_pub = _it->advertise("rgb", 1);
-    _caminfo_pub = _nh_public.advertise<sensor_msgs::CameraInfo>("camera_info", 1);
+    _rgb_pub = _it->advertise("camera/image_raw", 1);
+    _caminfo_pub = _nh_public.advertise<sensor_msgs::CameraInfo>("camera/camera_info", 1);
     _battery_percentage_pub = _nh_public.advertise<std_msgs::Int16>("battery_percentage", 1);
     _posture_pub = _nh_public.advertise<std_msgs::String>("posture", 1);
     _link_quality_pub = _nh_public.advertise<std_msgs::Int16>("link_quality", 1);
@@ -154,7 +154,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void spinOnce() {
-    if (_rgb_pub.getNumSubscribers())
+    if (_rgb_pub.getNumSubscribers() || _caminfo_pub.getNumSubscribers())
       enable_pic_decoding();
     else
       disable_pic_decoding();
