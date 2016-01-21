@@ -2,6 +2,9 @@
 <arg name="robot" default="rossumo1" />
 <group ns="$(arg robot)">
   <!--
+  Camera calibration:
+  $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
+
   To record a bag from RGB video stream:
   $ rosbag record /rossumo1/cmd_vel /rossumo1/rgb
 
