@@ -195,8 +195,26 @@ public:
   /// pictures from the camera
   //////////////////////////////////////////////////////////////////////////////
 
-  inline void  enable_pic_decoding() { _pix_decoding_enabled = true; }
-  inline void disable_pic_decoding() { _pix_decoding_enabled = false; }
+  //! send the command that tells to the Jumping to begin its streaming
+  inline bool enable_pic_decoding() {
+    if (_pix_decoding_enabled)
+      return true;
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- send StreamingVideoEnable ... ");
+    if (js()->sendMediaStreamingVideoEnable (js(), 1) != ARCONTROLLER_OK)
+      return false;
+    _pix_decoding_enabled = true;
+    return true;
+  }
+  //! send the command that tells to the Jumping to stop its streaming
+  inline bool disable_pic_decoding() {
+    if (!_pix_decoding_enabled)
+      return true;
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- send StreamingVideoDisable ... ");
+    if (js()->sendMediaStreamingVideoEnable (js(), false) != ARCONTROLLER_OK)
+      return false;
+    _pix_decoding_enabled = false;
+    return true;
+  }
   inline void get_pic(cv::Mat& out) {
     pic_mutex.lock();
     _pic.copyTo(out);
@@ -216,7 +234,6 @@ public:
     errorController = ARCONTROLLER_OK;
     deviceState = ARCONTROLLER_DEVICE_STATE_MAX;
     _posture = _battery_percentage = _volume = _pic_idx = -1;
-    enable_pic_decoding();
     ARSAL_Sem_Init (&(stateSem), 0, 0);
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "-- Jumping Sumo Piloting --");
 
@@ -288,10 +305,8 @@ public:
       return false;
     }
 
-    // send the command that tells to the Jumping to begin its streaming
-    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- send StreamingVideoEnable ... ");
-    errorController = js()->sendMediaStreamingVideoEnable (js(), 1);
-    CHECK_ERROR(errorController);
+    _pix_decoding_enabled = false;
+    enable_pic_decoding();
     return true;
   } // end connect()
 
@@ -482,16 +497,14 @@ protected:
 
   static eARCONTROLLER_ERROR didReceiveFrameCallback (ARCONTROLLER_Frame_t *frame, void *customData)
   {
-    //ROS_INFO_THROTTLE(1, "didReceiveFrameCallback(%i)", frame->used);
+    //printf("didReceiveFrameCallback(%i)\n", frame->used);
     LightSumo* this_ptr = (LightSumo*) customData;
-    if (this_ptr->_pix_decoding_enabled) {
-      std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
-      this_ptr->pic_mutex.lock();
-      this_ptr->_pic = cv::imdecode(cv::Mat (ans_vector), -1);
-      this_ptr->_pic_idx++;
-      this_ptr->pic_mutex.unlock();
-      this_ptr->imageChanged();
-    }
+    std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
+    this_ptr->pic_mutex.lock();
+    this_ptr->_pic = cv::imdecode(cv::Mat (ans_vector), -1);
+    this_ptr->_pic_idx++;
+    this_ptr->pic_mutex.unlock();
+    this_ptr->imageChanged();
     return ARCONTROLLER_OK;
   } // end didReceiveFrameCallback()
 
