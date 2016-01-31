@@ -59,6 +59,13 @@ int main (/*int argc, char **argv*/) {
       sumo.set_speeds(0, w);
     else if (c == ' ')
       sumo.high_jump();
+    else if (c == '+')
+      sumo.increase_volume();
+    else if (c == '-')
+      sumo.decrease_volume();
+    else if (c == 's')
+      //sumo.play_sound("/media/audio/robot/beep.wav");
+      sumo.play_sound("beep.wav");
     else if (c == 'p') {
       if (rand()%2)
       sumo.set_posture_jumper();

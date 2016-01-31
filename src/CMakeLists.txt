@@ -1,3 +1,18 @@
+add_executable(sumo_prompt.exe
+  sumo_prompt.cpp
+  ../include/rossumo/light_sumo.h
+)
+target_link_libraries(sumo_prompt.exe
+  ${catkin_LIBRARIES} ${ARDRONESDK3_LIBRARIES} ${OpenCV_LIBRARIES}
+)
+
+add_executable(spider_prompt.exe
+  spider_prompt.cpp
+)
+target_link_libraries(spider_prompt.exe
+  ${catkin_LIBRARIES} ${ARDRONESDK3_LIBRARIES} ${OpenCV_LIBRARIES}
+)
+
 add_executable(light_sumo_test.exe
   light_sumo_test.cpp
   ../include/rossumo/light_sumo.h

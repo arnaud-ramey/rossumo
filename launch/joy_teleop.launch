@@ -16,8 +16,12 @@
     <param name="button_anim" value="6"/>
     <param name="button_high_jump" value="4"/>
     <param name="button_posture" value="5"/>
+    <param name="scale_angular" value="25"/>
+<!--
     <param name="scale_angular" value="30"/>
-    <param name="scale_linear" value="100"/>
+    <param name="scale_linear" value="75"/>
+-->
+    <param name="scale_linear" value="80"/>
   </node>
 </group>
 </launch>

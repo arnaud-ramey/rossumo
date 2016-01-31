@@ -1,8 +1,8 @@
 /*!
-  \file        light_sumo.h
+  \file
   \author      Arnaud Ramey <arnaud.a.ramey@gmail.com>
                 -- Robotics Lab, University Carlos III of Madrid
-  \date        2016/1/9
+  \date        2016/1/24
 
 ________________________________________________________________________________
 
@@ -20,14 +20,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 
-\class LightSumo
-  Wrapper of the ARDroneSDK3 sample "JumpingSumoPiloting.c" as a C++ lightweight class.
-
-  The available functions in the SDK are in include/libARController/ARCONTROLLER_Feature.h
-  from line 1156.
-*/
-#ifndef LIGHT_SUMO_H
-#define LIGHT_SUMO_H
+\todo Description of the file
+ */
+#include <iostream>
 
 extern "C" {
 #include <libARSAL/ARSAL.h>
@@ -38,10 +33,10 @@ extern "C" {
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "device_state2string.h"
-#include "controller_key2string.h"
+#include <rossumo/device_state2string.h>
+#include <rossumo/controller_key2string.h>
 
-#define TAG "rossumo"
+#define TAG "rosspider"
 #define JS_IP_ADDRESS "192.168.2.1"
 #define JS_DISCOVERY_PORT 44444
 
@@ -53,13 +48,13 @@ extern "C" {
   } \
   }
 
-class LightSumo {
+class LightSpider {
 public:
-  LightSumo() {
+  LightSpider() {
     // all initializations done in connect()
   }
 
-  ~LightSumo() {
+  ~LightSpider() {
     // we are here because of a disconnection or user has quit IHM, so safely delete everything
     if (deviceController != NULL) {
       deviceState = ARCONTROLLER_Device_GetState (deviceController, &errorController);
@@ -88,7 +83,7 @@ public:
   bool connect() {
     // add the speed callback
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
-    ARCOMMANDS_Decoder_SetJumpingSumoPilotingStateSpeedChangedCallback(speedChangedCb, this);
+    ARCOMMANDS_Decoder_SetMiniDronePilotingStateSpeedChangedCallback(speedChangedCb, this);
 
     device = NULL;
     deviceController = NULL;
@@ -96,7 +91,7 @@ public:
     deviceState = ARCONTROLLER_DEVICE_STATE_MAX;
     _posture = _battery_percentage = _volume = _pic_idx = -1;
     ARSAL_Sem_Init (&(stateSem), 0, 0);
-    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "-- Jumping Sumo Piloting --");
+    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "-- Jumping spider Piloting --");
 
     // create a discovery device
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- init discovey device ... ");
@@ -110,8 +105,8 @@ public:
     }
 
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "ARDISCOVERY_Device_InitWifi ...");
-    // create a JumpingSumo discovery device (ARDISCOVERY_PRODUCT_JS)
-    errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_JS, "JS", JS_IP_ADDRESS, JS_DISCOVERY_PORT);
+    // create a MiniDrone discovery device (ARDISCOVERY_PRODUCT_MINIDRONE)
+    errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_MINIDRONE, "JS", JS_IP_ADDRESS, JS_DISCOVERY_PORT);
     if (errorDiscovery != ARDISCOVERY_OK) {
       ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "Discovery error :%s", ARDISCOVERY_Error_ToString(errorDiscovery));
       printf("Fail at line %i\n", __LINE__);
@@ -125,9 +120,9 @@ public:
       printf("Fail at line %i\n", __LINE__);
       return false;
     }
-    //deviceController->jumpingSumo = ARCONTROLLER_FEATURE_JumpingSumo_New (deviceController->privatePart->networkController, &localError);
+    //deviceController->MiniDrone = ARCONTROLLER_FEATURE_MiniDrone_New (deviceController->privatePart->networkController, &localError);
     //ARCONTROLLER_Device.c line 191
-    // deviceController->jumpingSumoDebug = ARCONTROLLER_FEATURE_JumpingSumoDebug_New (deviceController->privatePart->networkController, &localError);
+    // deviceController->MiniDroneDebug = ARCONTROLLER_FEATURE_MiniDroneDebug_New (deviceController->privatePart->networkController, &localError);
 
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- delete discovey device ... ");
     ARDISCOVERY_Device_Delete (&device);
@@ -192,97 +187,6 @@ public:
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  /// postures
-  //////////////////////////////////////////////////////////////////////////////
-
-  inline unsigned int get_posture() const { return _posture; }
-  inline std::string get_posture2str() const {
-    switch (_posture) {
-      case ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING:
-        return "standing";
-      case ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_JUMPER:
-        return "kicker";
-      case ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_KICKER:
-        return "jumper";
-      default:
-        break;
-    }
-    return "unknown";
-  }
-  bool set_posture_standing() {
-    return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_STANDING) == ARCONTROLLER_OK);
-  }
-  bool set_posture_jumper() {
-    return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_JUMPER) == ARCONTROLLER_OK);
-  }
-  bool set_posture_kicker() {
-    return (js()->sendPilotingPosture(js(), ARCOMMANDS_JUMPINGSUMO_PILOTING_POSTURE_TYPE_KICKER) == ARCONTROLLER_OK);
-  }
-  bool set_posture(const std::string & p) {
-    if (p == "standing") return set_posture_standing();
-    else if (p == "kicker") return set_posture_kicker();
-    else if (p == "jumper") return set_posture_jumper();
-    ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "unknown posture '%s'", p.c_str());
-    return false;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  /// jumps
-  //////////////////////////////////////////////////////////////////////////////
-
-  void high_jump() {
-    errorController = js()->sendAnimationsJump (js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_JUMP_TYPE_HIGH);
-  }
-  void long_jump() {
-    errorController = js()->sendAnimationsJump (js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_JUMP_TYPE_LONG);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  /// animations
-  //////////////////////////////////////////////////////////////////////////////
-
-  inline bool anim_spin() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIN)== ARCONTROLLER_OK);
-  }
-  inline bool anim_tap() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_TAP)== ARCONTROLLER_OK);
-  }
-  inline bool anim_slowshake() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLOWSHAKE)== ARCONTROLLER_OK);
-  }
-  inline bool anim_metronome() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_METRONOME)== ARCONTROLLER_OK);
-  }
-  inline bool anim_ondulation() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_ONDULATION)== ARCONTROLLER_OK);
-  }
-  inline bool anim_spinJump() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINJUMP)== ARCONTROLLER_OK);
-  }
-  inline bool anim_spinToPosture() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPINTOPOSTURE)== ARCONTROLLER_OK);
-  }
-  inline bool anim_spiral() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SPIRAL)== ARCONTROLLER_OK);
-  }
-  inline bool anim_slalom() {
-    return (js()->sendAnimationsSimpleAnimation(js(), ARCOMMANDS_JUMPINGSUMO_ANIMATIONS_SIMPLEANIMATION_ID_SLALOM)== ARCONTROLLER_OK);
-  }
-  bool anim(const std::string & p) {
-    if (p == "spin") return anim_spin();
-    else if (p == "tap") return anim_tap();
-    else if (p == "slowshake") return anim_slowshake();
-    else if (p == "metronome") return anim_metronome();
-    else if (p == "ondulation") return anim_ondulation();
-    else if (p == "spinJump") return anim_spinJump();
-    else if (p == "spinToPosture") return anim_spinToPosture();
-    else if (p == "spiral") return anim_spiral();
-    else if (p == "slalom") return anim_slalom();
-    ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "unknown anim '%s'", p.c_str());
-    return false;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
   /// sounds
   //////////////////////////////////////////////////////////////////////////////
 
@@ -299,7 +203,7 @@ public:
 
   inline bool play_sound(const std::string & filename) {
     printf("play_sound('%s')\n", filename.c_str());
-    //ARCOMMANDS_Generator_GenerateJumpingSumoDebugAudioPlaySoundWithName
+    //ARCOMMANDS_Generator_GenerateMiniDroneDebugAudioPlaySoundWithName
     // https://stackoverflow.com/questions/7352099/stdstring-to-char
     char *cstr =new char[filename.length() + 1];
     strcpy(cstr, filename.c_str());
@@ -308,15 +212,15 @@ public:
     delete [] cstr;
     return ok;
   }
-  // ARCOMMANDS_JUMPINGSUMO_AUDIOSETTINGS_THEME_THEME_INSECT
+  // ARCOMMANDS_MiniDrone_AUDIOSETTINGS_THEME_THEME_INSECT
   bool set_audiotheme_insect() {
-    return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_JUMPINGSUMO_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
+    return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_MiniDrone_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
   }
   bool set_audiotheme_monster() {
-    return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_JUMPINGSUMO_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
+    return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_MiniDrone_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
   }
   bool set_audiotheme_robot() {
-    return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_JUMPINGSUMO_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
+    return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_MiniDrone_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
   }
   bool set_audiotheme(const std::string & p) {
     if (p == "insect") return set_audiotheme_insect();
@@ -361,18 +265,18 @@ public:
 protected:
   //////////////////////////////////////////////////////////////////////////////
 
-  inline ARCONTROLLER_FEATURE_JumpingSumo_t* js() {
-    return deviceController->jumpingSumo;
+  inline ARCONTROLLER_FEATURE_MiniDrone_t* js() {
+    return deviceController->miniDrone;
   }
-  inline ARCONTROLLER_FEATURE_JumpingSumoDebug_t* jsd() {
-    return deviceController->jumpingSumoDebug;
+  inline ARCONTROLLER_FEATURE_MiniDroneDebug_t* jsd() {
+    return deviceController->miniDroneDebug;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
   static void speedChangedCb (int8_t speed, int16_t realSpeed, void */*customData*/) {
     printf("speedChangedCb(speed:%i, realSpeed:%i)\n", speed, realSpeed);
-    //LightSumo* this_ptr = (LightSumo*) customData;
+    //LightSpider* this_ptr = (LightSpider*) customData;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -381,7 +285,7 @@ protected:
   static void stateChanged (eARCONTROLLER_DEVICE_STATE newState, eARCONTROLLER_ERROR /*error*/, void *customData) {
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "stateChanged newState: %d='%s' .....",
                 newState, device_state2string(newState));
-    LightSumo* this_ptr = (LightSumo*) customData;
+    LightSpider* this_ptr = (LightSpider*) customData;
 
     switch (newState)
     {
@@ -434,11 +338,11 @@ protected:
   }
   inline std::string get_alert2str() const {
     switch (_alert) {
-      case ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_NONE:
+      case ARCOMMANDS_MiniDrone_PILOTINGSTATE_ALERTSTATECHANGED_STATE_NONE:
         return "none";
-      case ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+      case ARCOMMANDS_MiniDrone_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
         return "critical_battery";
-      case ARCOMMANDS_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+      case ARCOMMANDS_MiniDrone_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
         return "low_battery";
       default:
         break;
@@ -497,7 +401,7 @@ protected:
                                void *customData)
   {
     printf("commandReceived(%i = '%s')\n", commandKey, controller_key2string(commandKey));
-    LightSumo* this_ptr = (LightSumo*) customData;
+    LightSpider* this_ptr = (LightSpider*) customData;
     ARCONTROLLER_Device_t *deviceController = this_ptr->deviceController;
     //eARCONTROLLER_ERROR error = ARCONTROLLER_OK;
 
@@ -506,31 +410,31 @@ protected:
     unsigned int val = 0;
 
     // speed change
-    if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_SPEEDCHANGED)
+    if (commandKey == ARCONTROLLER_DICTIONARY_KEY_MiniDrone_PILOTINGSTATE_SPEEDCHANGED)
       printf("Speed changed!\n");
     // posture
-    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_POSTURECHANGED
-             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_POSTURECHANGED_STATE, val))
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_MiniDrone_PILOTINGSTATE_POSTURECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_MiniDrone_PILOTINGSTATE_POSTURECHANGED_STATE, val))
       this_ptr->postureChanged(val);
     // battery
     else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED
              && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED_PERCENT, val))
       this_ptr->batteryChanged (val);
     // volume
-    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED
-             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED_VOLUME, val))
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_MiniDrone_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_MiniDrone_AUDIOSETTINGSSTATE_MASTERVOLUMECHANGED_VOLUME, val))
       this_ptr->volumeChanged (val);
     // link_quality
-    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_NETWORKSTATE_LINKQUALITYCHANGED
-             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_NETWORKSTATE_LINKQUALITYCHANGED_QUALITY, val))
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_MiniDrone_NETWORKSTATE_LINKQUALITYCHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_MiniDrone_NETWORKSTATE_LINKQUALITYCHANGED_QUALITY, val))
       this_ptr->link_qualityChanged (val);
     // alert
-    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED
-             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_PILOTINGSTATE_ALERTSTATECHANGED_STATE, val))
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_MiniDrone_PILOTINGSTATE_ALERTSTATECHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_MiniDrone_PILOTINGSTATE_ALERTSTATECHANGED_STATE, val))
       this_ptr->alertChanged(val);
     // outdoor
-    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_SPEEDSETTINGSSTATE_OUTDOORCHANGED
-             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_JUMPINGSUMO_SPEEDSETTINGSSTATE_OUTDOORCHANGED_OUTDOOR, val))
+    else if (commandKey == ARCONTROLLER_DICTIONARY_KEY_MiniDrone_SPEEDSETTINGSSTATE_OUTDOORCHANGED
+             && safe_get_arg(elementDictionary, ARCONTROLLER_DICTIONARY_KEY_MiniDrone_SPEEDSETTINGSSTATE_OUTDOORCHANGED_OUTDOOR, val))
       this_ptr->outdoorChanged (val);
   } // end commandReceived();
 
@@ -548,7 +452,7 @@ protected:
   static eARCONTROLLER_ERROR didReceiveFrameCallback (ARCONTROLLER_Frame_t *frame, void *customData)
   {
     //printf("didReceiveFrameCallback(%i)\n", frame->used);
-    LightSumo* this_ptr = (LightSumo*) customData;
+    LightSpider* this_ptr = (LightSpider*) customData;
     std::vector<uchar> ans_vector (frame->data, frame->data + frame->used);
     this_ptr->pic_mutex.lock();
     this_ptr->_pic = cv::imdecode(cv::Mat (ans_vector), -1);
@@ -571,7 +475,50 @@ protected:
   bool _pix_decoding_enabled;
   unsigned int _pic_idx;
   boost::mutex pic_mutex;
-}; // end class LightSumo
+}; // end class LightSpider
 
-#endif // LIGHT_SUMO_H
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+void print_help(int /*argc*/, char** argv) {
+  printf("Synopsis: %s CMD PARAM\n", argv[0]);
+  printf("'vol':  set_volume                    vol(0~100)\n");
+  printf("'sou':  play_sound                    sound(string)\n");
+  printf("'the':  set_audiotheme                theme:'insect|monster|robot'\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    print_help(argc, argv);
+    return -1;
+  }
+  LightSpider spider;
+  if (!spider.connect()) {
+    return -1;
+  }
+
+  std::string choice = argv[1];
+  unsigned int nparams = argc - 2;
+  double param1 = (argc >= 3 ? atof(argv[2]) : -1);
+  double param2 = (argc >= 4 ? atof(argv[3]) : -1);
+  double param3 = (argc >= 5 ? atof(argv[4]) : -1);
+  double param4 = (argc >= 6 ? atof(argv[5]) : -1);
+  double param5 = (argc >= 7 ? atof(argv[6]) : -1);
+  if (choice == "vol" && nparams == 1)
+    printf("retval:%i\n", spider.set_volume(param1));
+  else if (choice == "sou" && nparams == 1)
+    printf("retval:%i\n", spider.play_sound(argv[2]));
+  else if (choice == "the" && nparams == 1)
+    printf("retval:%i\n", spider.set_audiotheme(argv[2]));
+  else // nothing done
+    print_help(argc, argv);
+
+  return 0;
+}
+
+
+
+
 
