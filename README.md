@@ -193,7 +193,7 @@ $ repo sync
 Build ARDroneSDK3
 -----------------
 
-```c++
+```bash
 $ ./build.sh -p Unix-forall -t build-sdk -j
 ```
 
@@ -201,7 +201,7 @@ $ ./build.sh -p Unix-forall -t build-sdk -j
 Build ARDroneSDK3 samples
 -------------------------
 
-```c++
+```bash
 $ git clone https://github.com/Parrot-Developers/Samples.git
 $ cd Samples/Unix/JumpingSumoPiloting
 ```
@@ -216,7 +216,7 @@ LDIR = $(SDK_DIR)/lib/
 <add json to libs>
 ```
 
-```c++
+```bash
 $ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
 $ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
 ```
@@ -225,7 +225,7 @@ $ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/s
 Build rossumo
 -------------
 
-```c++
+```bash
 $ catkin_make --only-pkg-with-deps rossumo
 ```
 
@@ -237,7 +237,7 @@ Following the instructions of camera_calibration
 [wiki page](http://wiki.ros.org/camera_calibration) and
 [tutorial](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration) :
 
-```c++
+```bash
 $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
 ```
 
