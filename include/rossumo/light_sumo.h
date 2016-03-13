@@ -178,8 +178,15 @@ public:
   /// speed and turn
   //////////////////////////////////////////////////////////////////////////////
 
-  void set_speeds(double v, double w) {
+  //! clamp a value between boundaries
+  inline static int clamp(int x, int min, int max) {
+    return (x < min ? min : x > max ? max : x);
+  }
+
+  void set_speeds(int v, int w) {
     //printf("set_speeds(%i, %i)\n", v, w);
+    v = clamp(v, -100, 100);
+    w = clamp(w, -100, 100);
     errorController = js()->setPilotingPCMD(js(), 1, v, w);
   }
 
