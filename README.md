@@ -3,6 +3,8 @@
 <p align="center">
 <img src="https://raw.githubusercontent.com/arnaud-ramey/rossumo/master/doc/jumping_sumo.jpg"
    alt="sumo" style="width: 300px"/>
+<img src="https://github.com/arnaud-ramey/rosmip/raw/master/doc/ros_indigoigloo_600.png"
+   alt="MiP" style="width: 200px"/>
 </p>
 
 Description
@@ -46,13 +48,13 @@ Node parameters
 ---------------
 
 - `camera_calibration_filename`
-[std::string, default: ``]
+[std::string, default: ""]
 
 If not empty, the path to the calibration file of the camera.
 For instance, `$(find rossumo)/data/sumo_camera_parameters.yaml`
 
 - `camera_calibration_camname`
-[std::string, default: `camname`]
+[std::string, default: "camname"]
 
 Name of the camera in the calibration file of the camera.
 For instance, `$(find rossumo)/data/sumo_camera_parameters.yaml`
