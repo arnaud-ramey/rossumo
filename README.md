@@ -1,9 +1,9 @@
 # rossumo
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/arnaud-ramey/rossumo/master/doc/jumping_sumo.jpg"
+<img src="doc/jumping_sumo.jpg"
    alt="sumo" style="width: 300px"/>
-<img src="https://github.com/arnaud-ramey/rosmip/raw/master/doc/ros_indigoigloo_600.png"
+<img src="doc/ros_indigoigloo_600.png"
    alt="MiP" style="width: 200px"/>
 </p>
 
@@ -180,6 +180,14 @@ Dependencies
 $ sudo apt-get install phablet-tools autoconf
 ```
 
+**FFMPEG** for Trusty: you need the latest version of ```ffmpeg```.
+Use the [official PPA](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media):
+
+```bash
+$ sudo add-apt-repository ppa:mc3man/trusty-media
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade
+```
 
 Download ARDroneSDK3
 --------------------
