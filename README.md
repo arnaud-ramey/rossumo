@@ -196,7 +196,7 @@ Following [the instructions](http://developer.parrot.com/docs/bebop/?c#download-
 
 ```bash
 $ repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
-$ repo sync
+$ repo sync --force-sync
 ```
 
 
@@ -204,21 +204,30 @@ Build ARDroneSDK3
 -----------------
 
 ```bash
-$ ./build.sh -p Unix-forall -t build-sdk -j
+$ ./build.sh -p arsdk-native -t build-sdk -j
 ```
 
 
-Build ARDroneSDK3 samples
--------------------------
+Build ARDroneSDK3 samples (optional)
+------------------------------------
 
 ```bash
 $ git clone https://github.com/Parrot-Developers/Samples.git
-$ cd Samples/Unix/JumpingSumoPiloting
 ```
+
+### New version - ```build.sh```-based
+
+```bash
+$ ./build.sh -p Unix-forall -t build-sample
+```
+
+### Old version - Makefile-based
 
 Change the lines in the Makefile:
 
 ```makefile
+$ cd Samples/Unix/JumpingSumoPiloting
+$ geany Makefile
 SDK_DIR=/home/arnaud/sumo/out/Unix-base/staging/usr
 CFLAGS=-I$(IDIR) -I $(SDK_DIR)/include/
 LDIR = $(SDK_DIR)/lib/
@@ -231,7 +240,6 @@ $ make
 $ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
 $ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
 ```
-
 
 Build rossumo
 -------------
