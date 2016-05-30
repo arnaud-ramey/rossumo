@@ -218,7 +218,7 @@ $ git clone https://github.com/Parrot-Developers/Samples.git
 ### New version - ```build.sh```-based
 
 ```bash
-$ ./build.sh -p Unix-forall -t build-sample
+$ ./build.sh -p arsdk-native -t build-sample
 ```
 
 ### Old version - Makefile-based
