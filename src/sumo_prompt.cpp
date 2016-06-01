@@ -47,14 +47,12 @@ int main(int argc, char** argv) {
   std::string choice = argv[1];
   unsigned int nparams = argc - 2;
   double param1 = (argc >= 3 ? atof(argv[2]) : -1);
-  double param2 = (argc >= 4 ? atof(argv[3]) : -1);
-  double param3 = (argc >= 5 ? atof(argv[4]) : -1);
-  double param4 = (argc >= 6 ? atof(argv[5]) : -1);
-  double param5 = (argc >= 7 ? atof(argv[6]) : -1);
+  //double param2 = (argc >= 4 ? atof(argv[3]) : -1);
+  //double param3 = (argc >= 5 ? atof(argv[4]) : -1);
+  //double param4 = (argc >= 6 ? atof(argv[5]) : -1);
+  //double param5 = (argc >= 7 ? atof(argv[6]) : -1);
   if (choice == "vol" && nparams == 1)
     printf("retval:%i\n", sumo.set_volume(param1));
-  else if (choice == "sou" && nparams == 1)
-    printf("retval:%i\n", sumo.play_sound(argv[2]));
   else if (choice == "the" && nparams == 1)
     printf("retval:%i\n", sumo.set_audiotheme(argv[2]));
   else // nothing done

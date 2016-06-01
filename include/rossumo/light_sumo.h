@@ -304,17 +304,6 @@ public:
   inline bool increase_volume() { return set_volume( get_volume() + 5 ); }
   inline bool decrease_volume() { return set_volume( ((int) get_volume()) - 5 ); }
 
-  inline bool play_sound(const std::string & filename) {
-    printf("play_sound('%s')\n", filename.c_str());
-    //ARCOMMANDS_Generator_GenerateJumpingSumoDebugAudioPlaySoundWithName
-    // https://stackoverflow.com/questions/7352099/stdstring-to-char
-    char *cstr =new char[filename.length() + 1];
-    strcpy(cstr, filename.c_str());
-    // do stuff
-    bool ok = (jsd()->sendAudioPlaySoundWithName(jsd(), cstr) == ARCONTROLLER_OK);
-    delete [] cstr;
-    return ok;
-  }
   // ARCOMMANDS_JUMPINGSUMO_AUDIOSETTINGS_THEME_THEME_INSECT
   bool set_audiotheme_insect() {
     return (js()->sendAudioSettingsTheme(js(), ARCOMMANDS_JUMPINGSUMO_AUDIOSETTINGS_THEME_THEME_INSECT) == ARCONTROLLER_OK);
@@ -370,9 +359,6 @@ protected:
 
   inline ARCONTROLLER_FEATURE_JumpingSumo_t* js() {
     return deviceController->jumpingSumo;
-  }
-  inline ARCONTROLLER_FEATURE_JumpingSumoDebug_t* jsd() {
-    return deviceController->jumpingSumoDebug;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
