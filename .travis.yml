@@ -4,8 +4,15 @@ compiler:
   - gcc
 
 before_install:
-  # install required packages
-  - sudo apt-get install phablet-tools  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
+  # install required packages from Ubuntu packages
+  - sudo apt-get install autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
+  # intall phablet-tools from PPA (it is included in Ubuntu packages from 14.04+)
+  - sudo apt-add-repository --yes ppa:phablet-team/tools
+  - sudo apt-get -qq update
+  - sudo apt-get install -y  phablet-tools
+  # install ARDroneSDK3
+  - repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
+  - repo sync --force-sync
   # install ROS
   - export ROS_DISTRO=hydro
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
