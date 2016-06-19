@@ -1,5 +1,7 @@
 # rossumo
 
+[![Build Status](https://travis-ci.org/arnaud-ramey/rossumo.svg)](https://travis-ci.org/arnaud-ramey/rossumo)
+
 <p align="center">
 <img src="doc/jumping_sumo.jpg"
    alt="sumo" style="width: 300px"/>
