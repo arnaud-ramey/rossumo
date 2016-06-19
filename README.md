@@ -10,10 +10,12 @@
 Description
 ===========
 
-"rossumo" is a driver to use the Jumping Sumo robot, built by Parrot, in ROS.
+"rossumo" is a driver to use the
+[Jumping Sumo](https://store.parrot.com/uk/jumping-sumo/112-jumping-sumo.html) robot, built by Parrot,
+in [ROS](http://www.ros.org/).
 It relies on
 [ARDroneSDK3](http://developer.parrot.com/docs/bebop/?c#general-information),
-the official Parrot DSK.
+the official Parrot SDK.
 It is written in C++.
 
 
