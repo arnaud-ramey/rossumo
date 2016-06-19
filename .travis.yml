@@ -15,6 +15,8 @@ before_install:
   - export PATH=~/bin:$PATH
   - curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
   - chmod a+x ~/bin/repo
+  - git config --global user.name "Travis CI"
+  - git config --global user.email "foo@bar.com"
   # download ARDroneSDK3
   - repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
   - repo sync --force-sync
