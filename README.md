@@ -248,6 +248,10 @@ Build rossumo
 $ catkin_make --only-pkg-with-deps rossumo
 ```
 
+To specify the path to the ARDroneSDK3 'usr' folder:
+```bash
+$ catkin_make --only-pkg-with-deps rossumo -DARDRONESDK3_PATH=~/out/Unix-base/staging/usr
+```
 
 Camera calibration
 ==================
