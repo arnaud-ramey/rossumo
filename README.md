@@ -241,8 +241,8 @@ $ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/l
 $ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
 ```
 
-Build rossumo
--------------
+Build rossumo with Catkin
+-------------------------
 
 ```bash
 $ catkin_make --only-pkg-with-deps rossumo
