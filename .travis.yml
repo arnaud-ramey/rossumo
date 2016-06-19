@@ -6,15 +6,13 @@ compiler:
 before_install:
   # install required packages from Ubuntu packages
   - sudo apt-get install autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
-  # intall phablet-tools from PPA (it is included in Ubuntu packages from 14.04+)
-  #~ - sudo apt-add-repository --yes ppa:phablet-team/tools
-  #~ - sudo apt-get -qq update
-  #~ - sudo apt-get install -y  phablet-tools
   # try to install repo according to https://source.android.com/source/downloading.html#installing-repo
   - mkdir ~/bin
   - export PATH=~/bin:$PATH
   - curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
   - chmod a+x ~/bin/repo
+  # skip the prompt concerning the use of colors:
+  - git config --global color.ui true
   - git config --global user.name "Travis CI"
   - git config --global user.email "foo@bar.com"
   # download ARDroneSDK3
