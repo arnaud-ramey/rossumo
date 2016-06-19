@@ -177,7 +177,7 @@ Dependencies
 ------------
 
 ```bash
-$ sudo apt-get install phablet-tools autoconf
+$ sudo apt-get install phablet-tools  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
 ```
 
 **FFMPEG** for Trusty: you need the latest version of ```ffmpeg```.
