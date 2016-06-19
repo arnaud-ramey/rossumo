@@ -4,6 +4,7 @@ compiler:
   - gcc
 
 before_install:
+  - export CI_SOURCE_PATH=$(pwd)
   # install required packages from Ubuntu packages
   - sudo apt-get install autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
   # try to install repo according to https://source.android.com/source/downloading.html#installing-repo
@@ -31,7 +32,6 @@ before_install:
 
 before_script: # Use this to prepare your build for testing e.g. copy database configurations, environment variables, etc.
   # Create catkin workspace
-  - export CI_SOURCE_PATH=$(pwd)
   - mkdir -p ~/catkin_ws/src
   - cd ~/catkin_ws/src
   - catkin_init_workspace
