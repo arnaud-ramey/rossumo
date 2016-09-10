@@ -42,8 +42,6 @@ extern "C" {
 #include "controller_key2string.h"
 
 #define TAG "rossumo"
-#define JS_IP_ADDRESS "192.168.2.1"
-#define JS_DISCOVERY_PORT 44444
 
 #define CHECK_ERROR(errorController) { \
   if (errorController != ARCONTROLLER_OK) { \
@@ -55,7 +53,8 @@ extern "C" {
 
 class LightSumo {
 public:
-  LightSumo() {
+  LightSumo() : DEFAULT_IP_ADDRESS ("192.168.2.1"), DEFAULT_DISCOVERY_PORT (44444) {
+    set_connection_params(DEFAULT_IP_ADDRESS, DEFAULT_DISCOVERY_PORT);
     // all initializations done in connect()
   }
 
@@ -85,6 +84,13 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
 
+  void set_connection_params(const std::string & ip_address, int discovery_port) {
+    _ip_address = ip_address;
+    _discovery_port = discovery_port;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   bool connect() {
     // add the speed callback
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
@@ -111,7 +117,8 @@ public:
 
     ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "ARDISCOVERY_Device_InitWifi ...");
     // create a JumpingSumo discovery device (ARDISCOVERY_PRODUCT_JS)
-    errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_JS, "JS", JS_IP_ADDRESS, JS_DISCOVERY_PORT);
+    errorDiscovery = ARDISCOVERY_Device_InitWifi (device, ARDISCOVERY_PRODUCT_JS, "JS",
+                                                  _ip_address.c_str(), _discovery_port);
     if (errorDiscovery != ARDISCOVERY_OK) {
       ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "Discovery error :%s", ARDISCOVERY_Error_ToString(errorDiscovery));
       printf("Fail at line %i\n", __LINE__);
@@ -554,6 +561,8 @@ protected:
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
+  std::string _ip_address, DEFAULT_IP_ADDRESS;
+  int _discovery_port, DEFAULT_DISCOVERY_PORT;
   ARDISCOVERY_Device_t *device;
   ARCONTROLLER_Device_t *deviceController;
   ARSAL_Sem_t stateSem;
