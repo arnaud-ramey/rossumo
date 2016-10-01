@@ -184,7 +184,7 @@ Dependencies
 Ubuntu 14.04:
 $ sudo apt-get install phablet-tools  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
 Ubuntu 16.04:
-$ sudo apt-get install repo  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
+$ sudo apt install repo  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
 ```
 
 **FFMPEG** for Trusty: you need the latest version of ```ffmpeg```.
