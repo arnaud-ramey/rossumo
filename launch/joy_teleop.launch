@@ -10,7 +10,7 @@
 
   <!-- Sumo specific teleoperation driver -->
   <node pkg="rossumo" type="sumo_teleop_joy.exe" name="teleop" output="screen">
-    <param name="axis_180turn" value="5"/>
+    <param name="axis_180_360turn" value="5"/>
     <param name="axis_90turn" value="4"/>
     <param name="axis_angular" value="0"/>
     <param name="axis_linear" value="3"/>

@@ -162,13 +162,27 @@ It is based on the [`turtlebot_teleop`](https://github.com/turtlebot/turtlebot/t
 Joystick remote control
 =======================
 
-To launch remote control of the Sumo thanks to joystick:
+To launch remote control of the Sumo thanks to a USB joystick:
 
 ```bash
 $ roslaunch rossumo joy_teleop.launch
 ```
 
 It is based on the [`joy`](http://wiki.ros.org/joy) package.
+
+Wiimote remote control
+=======================
+
+To launch remote control of the Sumo thanks to a Nintendo Wiimote,
+you need two launchers, one for the Wiimote driver,
+the other for the teleop node.
+
+```bash
+$ roslaunch rossumo wiimote_node.launch
+$ roslaunch rossumo wiimote_teleop.launch
+```
+
+It is based on the [`wiimote`](http://wiki.ros.org/wiimote) package.
 
 Installation
 ============
