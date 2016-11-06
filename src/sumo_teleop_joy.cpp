@@ -37,7 +37,7 @@ double scale_linear = 1.0, scale_angular = 1.0;
 double offset_linear = 0.0, offset_angular = 0.0;
 std::string posture = "jumper";
 bool high_jump_before = false, posture_before = false, anim_before = false;
-bool turn_90before = false, turn_180before = false;
+bool sharp_turn_before = false;
 std_msgs::String string_msg;
 ros::Publisher posture_pub, cmd_vel_pub, high_jump_pub, sharp_turn_pub, anim_pub;
 
@@ -46,7 +46,8 @@ ros::Publisher posture_pub, cmd_vel_pub, high_jump_pub, sharp_turn_pub, anim_pub
 void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
   int naxes = joy->axes.size(), nbuttons = joy->buttons.size();
   bool command_sent = false,
-      deadman_ok = (button_deadman < 0 || (nbuttons > button_deadman && joy->buttons[button_deadman]));
+      deadman_ok = (button_deadman < 0
+                    || (nbuttons > button_deadman && joy->buttons[button_deadman]));
   if (!deadman_ok) {
     ROS_INFO_THROTTLE(10, "Dead man button %i is not pressed, sending a 0 speed order.", button_deadman);
     geometry_msgs::Twist vel;
@@ -60,33 +61,28 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
                      && joy->buttons[button_90right]);
   bool axis90now = (axis_90turn >= 0 && axis_90turn < naxes
                     && fabs(joy->axes[axis_90turn]) > 0.9);
-  bool turn_90now = left90now || right90now || axis90now;
-  if (turn_90now && !turn_90before) {
-    std_msgs::Float32 msg;
-    if (left90now)       msg.data = -M_PI_2;
-    else if (right90now) msg.data = M_PI_2;
-    else                 msg.data = (joy->axes[axis_90turn] < 0 ? M_PI_2 : -M_PI_2);
-    sharp_turn_pub.publish(msg);
-    command_sent = true;
-  }
-  turn_90before = turn_90now;
   // sharp turns at 180°
   bool button_180now = (button_180turn >= 0 && button_180turn < nbuttons
                       && joy->buttons[button_180turn]);
   bool button_360now = (button_360turn >= 0 && button_360turn < nbuttons
                       && joy->buttons[button_360turn]);
-  bool axis_180_360now = (button_180turn >= 0 && button_180turn < nbuttons
-                      && joy->buttons[button_180turn]);
-  bool turn_180now = button_180now || button_360now || axis_180_360now;
-  if (turn_180now && !turn_180before) {
+  bool axis_180_360now = (axis_180_360turn >= 0 && axis_180_360turn < naxes
+                          && fabs(joy->axes[axis_180_360turn]) > 0.9);
+  bool sharp_turn_now = left90now || right90now || axis90now
+      || button_180now || button_360now || axis_180_360now;
+  if (sharp_turn_now && !sharp_turn_before) {
     std_msgs::Float32 msg;
-    if (button_180now)      msg.data = -M_PI;
-    else if (button_360now) msg.data = 2 * M_PI;
-    else                    msg.data = (joy->axes[axis_180_360now] > 0 ? 2 * M_PI : -M_PI);
+    if (left90now)            msg.data = -M_PI_2;
+    else if (right90now)      msg.data = M_PI_2;
+    else if (axis90now)       msg.data = (joy->axes[axis_90turn] < 0 ? M_PI_2 : -M_PI_2);
+    else if (button_180now)   msg.data = -M_PI;
+    else if (button_360now)   msg.data = 2 * M_PI;
+    else if (axis_180_360now) msg.data = (joy->axes[axis_180_360turn] > 0 ? 2 * M_PI : -M_PI);
+    ROS_INFO("Starting sharp turm of %i degrees!", (int)(msg.data * 180 / M_PI));
     sharp_turn_pub.publish(msg);
     command_sent = true;
   }
-  turn_180before = turn_180now;
+  sharp_turn_before = sharp_turn_now;
 
   // jumps
   bool high_jump_now = (button_high_jump >=0 && nbuttons > button_high_jump
