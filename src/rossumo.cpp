@@ -44,10 +44,15 @@ public:
     // read params
     std::string cal_filename = "", cal_camname = "camname";
     _caminfo_read = false;
+    _nh_private.param("max_vel_lin", _max_vel_lin, _max_vel_lin);
+    _nh_private.param("max_vel_ang", _max_vel_ang, _max_vel_ang);
     _nh_private.param("ip_address", _ip_address, DEFAULT_IP_ADDRESS);
     _nh_private.param("discovery_port", _discovery_port, DEFAULT_DISCOVERY_PORT);
     _nh_private.param("camera_calibration_filename", cal_filename, cal_filename);
     _nh_private.param("camera_calibration_camname", cal_camname, cal_camname);
+    ROS_INFO("rossumo '%s': IP:%s:%i, max velocities:%i, %i",
+             _nh_public.getNamespace().c_str(),
+             _ip_address.c_str(), _discovery_port, _max_vel_lin, _max_vel_ang);
     if (!cal_filename.empty())
       read_calibration(cal_filename, cal_camname);
 

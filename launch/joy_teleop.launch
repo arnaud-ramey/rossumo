@@ -1,6 +1,6 @@
 <launch>
 <arg name="robot" default="rossumo1" />
-<arg name="device" default="/dev/input/js1" />
+<arg name="device" default="/dev/input/js0" />
 <group ns="$(arg robot)">
   <!-- Driver for the joystick. -->
   <node pkg="joy" type="joy_node" name="joy" output="screen" >

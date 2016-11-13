@@ -51,6 +51,14 @@ $ roslaunch rossumo rossumo.launch
 Node parameters
 ---------------
 
+- `max_vel_lin  max_vel_ang`
+[int, default: 100]
+
+The maximum linear/angular velocity sent by the driver to the robot.
+100 is the max speed.
+Lower it to be kinder with the motors of the robot and
+hence increase their life expectancy.
+
 - `camera_calibration_filename`
 [std::string, default: ""]
 

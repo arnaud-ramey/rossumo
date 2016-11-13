@@ -1,23 +1,22 @@
 <launch>
-<!--
+
 <group ns="rossumo1">
   <node pkg="rossumo" type="rossumo.exe" name="driver1" required="true" output="screen">
-    <param name="ip_address" value="192.168.2.1"/>
+    <param name="ip_address" value="192.168.2.10"/>
   </node>
-  <include file="$(find rossumo)/launch/joy_teleop.launch">
-    <arg name="robot" value="rossumo1" />
-    <arg name="device" value="/dev/input/js1" />
-  </include>
 </group>
--->
+<include file="$(find rossumo)/launch/joy_teleop.launch">
+  <arg name="robot" value="rossumo1" />
+  <arg name="device" value="/dev/input/js0" />
+</include>
 
 <group ns="rossumo2">
   <node pkg="rossumo" type="rossumo.exe" name="driver2" required="true" output="screen">
-    <param name="ip_address" value="192.168.2.3"/>
+    <param name="ip_address" value="192.168.2.11"/>
   </node>
-  <include file="$(find rossumo)/launch/joy_teleop.launch">
-    <arg name="robot" value="rossumo2" />
-    <arg name="device" value="/dev/input/js2" />
-  </include>
 </group>
+<include file="$(find rossumo)/launch/joy_teleop.launch">
+  <arg name="robot" value="rossumo2" />
+  <arg name="device" value="/dev/input/js2" />
+</include>
 </launch>

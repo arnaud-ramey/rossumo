@@ -55,6 +55,7 @@ class LightSumo {
 public:
   LightSumo() : DEFAULT_IP_ADDRESS ("192.168.2.1"), DEFAULT_DISCOVERY_PORT (44444) {
     set_connection_params(DEFAULT_IP_ADDRESS, DEFAULT_DISCOVERY_PORT);
+    _max_vel_lin = _max_vel_ang = 100;
     // all initializations done in connect()
   }
 
@@ -192,8 +193,8 @@ public:
 
   void set_speeds(int v, int w) {
     //printf("set_speeds(%i, %i)\n", v, w);
-    v = clamp(v, -100, 100);
-    w = clamp(w, -100, 100);
+    v = clamp(v, -_max_vel_lin, _max_vel_lin);
+    w = clamp(w, -_max_vel_ang, _max_vel_ang);
     errorController = js()->setPilotingPCMD(js(), 1, v, w);
   }
 
@@ -568,6 +569,7 @@ protected:
   ARSAL_Sem_t stateSem;
   eARCONTROLLER_ERROR errorController;
   eARCONTROLLER_DEVICE_STATE deviceState;
+  int _max_vel_lin, _max_vel_ang;
   unsigned int _posture, _battery_percentage, _volume, _link_quality, _alert, _outdoor;
   cv::Mat _pic;
   bool _pix_decoding_enabled;
