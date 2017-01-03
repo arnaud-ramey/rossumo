@@ -35,6 +35,21 @@ extern "C" {
 #include <libARDiscovery/ARDiscovery.h>
 }
 
+// check version
+#include <boost/preprocessor/stringize.hpp>
+#define ROSSUMO_ARSDK_VERSION_MAJOR (3)
+#define ROSSUMO_ARSDK_VERSION_MINOR (1)
+#if ARCOMMANDS_VERSION_MAJOR != ROSSUMO_ARSDK_VERSION_MAJOR || \
+  ARCOMMANDS_VERSION_MINOR != ROSSUMO_ARSDK_VERSION_MINOR
+#pragma message "rossumo ARSDK version:" \
+  BOOST_PP_STRINGIZE(ROSSUMO_ARSDK_VERSION_MAJOR) \
+  "." BOOST_PP_STRINGIZE(ROSSUMO_ARSDK_VERSION_MINOR) \
+  ". Your ARSDK version is " \
+  BOOST_PP_STRINGIZE(ARCOMMANDS_VERSION_MAJOR) \
+  "." BOOST_PP_STRINGIZE(ARCOMMANDS_VERSION_MINOR)
+#error "rossumo is not compatible with your ARSDK version."
+#endif
+
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -45,7 +60,7 @@ extern "C" {
 
 #define CHECK_ERROR(errorController) { \
   if (errorController != ARCONTROLLER_OK) { \
-  ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%", ARCONTROLLER_Error_ToString(errorController)); \
+  ARSAL_PRINT(ARSAL_PRINT_ERROR, TAG, "- error :%s", ARCONTROLLER_Error_ToString(errorController)); \
   printf("Fail at line %i\n", __LINE__); \
   return false; \
   } \
@@ -93,9 +108,9 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool connect() {
-    // add the speed callback
-    ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
-    ARCOMMANDS_Decoder_SetJumpingSumoPilotingStateSpeedChangedCallback(speedChangedCb, this);
+    // add the speed callback - unused
+    //ARSAL_PRINT(ARSAL_PRINT_INFO, TAG, "- set speed callback ... ");
+    //ARCOMMANDS_Decoder_SetJumpingSumoPilotingStateSpeedChangedCallback(speedChangedCb, this);
 
     device = NULL;
     deviceController = NULL;

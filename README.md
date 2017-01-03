@@ -20,6 +20,12 @@ It relies on
 the official Parrot SDK.
 It is written in C++.
 
+This version is compatible with ARDroneSDK3 version 3.1.0.13.
+Unfortunately, Parrot developers change many files at each release of ARDroneSDK3,
+most notably "libARController/ARCONTROLLER_Dictionary.h".
+For this reason, it cannot be ensured that `rossumo` is compatible
+with later versions of ARDroneSDK3.
+ARSDK version can be checked in "libARCommands/ARCOMMANDS_Version.h".
 
 Supported hardware
 ==================
