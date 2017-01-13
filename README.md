@@ -4,9 +4,9 @@
 
 <p align="center">
 <img src="doc/jumping_sumo.jpg"
-   alt="sumo" style="width: 300px"/>
-<img src="doc/ros_indigoigloo_600.png"
-   alt="MiP" style="width: 200px"/>
+   alt="sumo" style="width: 200px"/>
+<img src="doc/kinetic.png"
+   alt="ROS_Kinetic" style="width: 200px"/>
 </p>
 
 Description
