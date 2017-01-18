@@ -27,9 +27,11 @@ ________________________________________________________________________________
 
 void print_help(int /*argc*/, char** argv) {
   printf("Synopsis: %s CMD PARAM\n", argv[0]);
-  printf("'vol':  set_volume                    vol(0~100)\n");
+  printf("'spe':  set speeds                    lin_speed(-100~100)       ang_speed(-100~100) [time s]\n");
   printf("'sou':  play_sound                    sound(string)\n");
   printf("'the':  set_audiotheme                theme:'insect|monster|robot'\n");
+  printf("'vol':  get_volume\n");
+  printf("'vol':  set_volume                    vol(0~100)\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,17 +49,32 @@ int main(int argc, char** argv) {
   std::string choice = argv[1];
   unsigned int nparams = argc - 2;
   double param1 = (argc >= 3 ? atof(argv[2]) : -1);
-  //double param2 = (argc >= 4 ? atof(argv[3]) : -1);
-  //double param3 = (argc >= 5 ? atof(argv[4]) : -1);
+  double param2 = (argc >= 4 ? atof(argv[3]) : -1);
+  double param3 = (argc >= 5 ? atof(argv[4]) : -1);
   //double param4 = (argc >= 6 ? atof(argv[5]) : -1);
   //double param5 = (argc >= 7 ? atof(argv[6]) : -1);
-  if (choice == "vol" && nparams == 1)
-    printf("retval:%i\n", sumo.set_volume(param1));
+  if (choice == "spe" && nparams == 2)
+    sumo.set_speeds(param1, param2);
+  else if (choice == "spe" && nparams == 3) {
+    unsigned int ntimes = param3 / .500; // a command each 100 ms
+    printf("ntimes:%i\n", ntimes);
+    for (unsigned int i = 0; i < ntimes; ++i) {
+      sumo.set_speeds(param1, param2);
+      usleep(500 * 1000);
+    }
+  }
   else if (choice == "the" && nparams == 1)
     printf("retval:%i\n", sumo.set_audiotheme(argv[2]));
+  else if (choice == "vol" && nparams == 0) {
+    printf("volume:%i\n", sumo.get_volume());
+  }
+  else if (choice == "vol" && nparams == 1)
+    printf("retval:%i\n", sumo.set_volume(param1));
   else // nothing done
     print_help(argc, argv);
 
+  sumo.disconnect();
+  sleep(1);
   return 0;
 }
 
