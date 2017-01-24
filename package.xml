@@ -10,11 +10,12 @@
   <license>GPLv2</license>
   <!-- dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>roscpp</depend>
-  <depend>roslib</depend>
   <depend>camera_calibration_parsers</depend>
   <depend>cv_bridge</depend>
+  <depend>image_geometry</depend>
   <depend>image_transport</depend>
+  <depend>roscpp</depend>
+  <depend>roslib</depend>
   <depend>std_msgs</depend>
   <export>
         <rosdoc config="rosdoc.yaml" /> <!-- http://wiki.ros.org/rosdoc_lite -->

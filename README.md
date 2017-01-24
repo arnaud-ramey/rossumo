@@ -296,6 +296,12 @@ Following the instructions of camera_calibration
 [tutorial](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration) :
 
 ```bash
+$ roscd ;  cd src
+$ git clone https://github.com/OTL/cv_camera
+$ catkin_make --only-pkg-with-deps rossumo cv_camera
+$ rosrun cv_camera  cv_camera_node _device_id:=1 _image_width:=1280 _image_heigh:=720
+$ rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.030 image:=/cv_camera/image_raw camera:=/camera --no-service-check
+
 $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
 ```
 
