@@ -165,13 +165,16 @@ TODO
 Keyboard remote control
 =======================
 
-To launch remote control of the Sumo thanks to keyboard:
+To launch remote control of the Sumo thanks to keyboard
+(script from [http://wiki.ros.org/teleop_twist_keyboard](teleop_twist_keyboard),
+but copied in the package because the Kinetic version in the Ubuntu repos
+does not allow setting max speeds with parameters):
 
 ```bash
 $ roslaunch rossumo joy_teleop.launch
 ```
 
-It is based on the [`turtlebot_teleop`](https://github.com/turtlebot/turtlebot/tree/indigo/turtlebot_teleop) package.
+It is based on the [`teleop_twist_keyboard`](http://wiki.ros.org/teleop_twist_keyboard) package.
 
 Joystick remote control
 =======================

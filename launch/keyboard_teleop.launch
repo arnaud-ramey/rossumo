@@ -2,11 +2,11 @@
 <arg name="robot" default="rossumo1" />
 <group ns="$(arg robot)">
 <!-- keyboard teleoperation
-https://github.com/turtlebot/turtlebot/blob/indigo/turtlebot_teleop/scripts/turtlebot_teleop_key   -->
-  <node pkg="turtlebot_teleop" type="turtlebot_teleop_key" name="teleop"
+https://github.com/ros-teleop/teleop_twist_keyboard/blob/master/teleop_twist_keyboard.py -->
+  <node pkg="rossumo" type="teleop_twist_keyboard.py" name="teleop"
         output="screen">
-    <param name="scale_linear" value="0.5" type="double"/>
-    <param name="scale_angular" value="5" type="double"/>
+    <param name="speed" value="20."/>
+    <param name="turn" value="20."/>
   </node>
 </group>
 </launch>
