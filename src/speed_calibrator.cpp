@@ -22,15 +22,78 @@ ________________________________________________________________________________
  */
 #include <ros/node_handle.h>
 #include <geometry_msgs/PointStamped.h>
+#include <tf/transform_listener.h>
 
-void pt_cb(const geometry_msgs::Point & pt) {
+boost::shared_ptr<tf::TransformListener> _tf_listener;
+ros::Publisher pospub;
+std::string _static_frame = "/world";
+geometry_msgs::PointStamped cam_pos, robot_direction, robot_pos; // in static frame
+bool cam_pos_converted = false;
+double goalz = 0;
 
+////////////////////////////////////////////////////////////////////////////////
+
+template<class Point3> static inline std::string printP(const Point3 & p) {
+  std::ostringstream ans;
+  ans << "(" << p.x << ", " << p.y << ", " << p.z << ")";
+  return ans.str();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<class Point3>
+void solve(const Point3 & A, const Point3 & B, double goalz,
+           Point3 & ans) {
+  double dx = B.x - A.x, dy = B.y - A.y, dz = B.z - A.z;
+  // solve A.z + t * dz = goalz
+  double t = (goalz - A.z) / dz;
+  ans.x = A.x + t * dx;
+  ans.y = A.y + t * dy;
+  ans.z = goalz;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void pt_cb(const geometry_msgs::PointStamped & robot_direction0) {
+  if (!cam_pos_converted) { // convert the position of the camera center into the static frame
+    geometry_msgs::PointStamped cam_pos0;
+    cam_pos0.header = robot_direction0.header;
+    try {
+      _tf_listener->transformPoint(_static_frame, ros::Time(0),
+                                   cam_pos0, _static_frame, cam_pos);
+      cam_pos_converted = true;
+    } catch (tf::TransformException e) {
+      ROS_WARN("Error converting cam center: '%s'", e.what());
+      return;
+    }
+  }
+  // convert the direction of the center into the static frame
+  try {
+    _tf_listener->transformPoint(_static_frame, ros::Time(0),
+                                 robot_direction0, _static_frame, robot_direction);
+  } catch (tf::TransformException e) {
+    ROS_WARN("Error converting robot direction: '%s'", e.what());
+    return;
+  }
+  // find the point on the line (camera, robot_direction) that has the goal z
+  solve(cam_pos.point, robot_direction.point, goalz, robot_pos.point);
+  robot_pos.header.stamp = robot_direction0.header.stamp;
+  pospub.publish(robot_pos);
+  ROS_INFO_THROTTLE(1, "Cam center:%s, robot dir:%s -> robot pos:%s",
+                    printP(cam_pos.point).c_str(), printP(robot_direction.point).c_str(),
+                    printP(robot_pos.point).c_str());
+} // end pt_cb();
+
+////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "image_localizer");
   ros::NodeHandle nh_public, nh_private("~");
-  ros::Subscriber sub = nh_private.subscribe("robot", 1, pt_cb);
-  // the camera will be deinitialized automatically in VideoCapture destructor
+  nh_private.param("goalz", goalz, goalz);
+  ros::Subscriber dirsub = nh_public.subscribe("robot_direction", 1, pt_cb);
+  pospub = nh_public.advertise<geometry_msgs::PointStamped>("robot_position", 1);
+  _tf_listener = boost::shared_ptr<tf::TransformListener>(new tf::TransformListener());
+  robot_pos.header.frame_id = _static_frame;
+  ros::spin();
   return 0;
 }

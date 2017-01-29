@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
   if (!load_from_file(configfile))
     return -1;
   tf::TransformBroadcaster br;
-  ros::Rate rate(10);
+  ros::Rate rate(50);
   while(ros::ok()) {
     transform.header.stamp = ros::Time::now();
     br.sendTransform(transform);

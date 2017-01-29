@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
   cap.set(CV_CAP_PROP_FRAME_HEIGHT, h);
 
   // set publisher
-  ros::Publisher pt_pub = nh_public.advertise<geometry_msgs::PointStamped>("robot", 1);
+  ros::Publisher pt_pub = nh_public.advertise<geometry_msgs::PointStamped>("robot_direction", 1);
   geometry_msgs::PointStamped msg;
   msg.header.frame_id = "camera_frame";
   cv::Point2f prev_pt;
