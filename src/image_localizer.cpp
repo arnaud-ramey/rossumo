@@ -41,6 +41,13 @@ void set_v4l_param(int fd, unsigned int id, int value, const std::string & descr
   printf("Retval for %s:%i\n", descr.c_str(), v4l2_ioctl(fd, VIDIOC_S_CTRL, &c));
 }
 
+template<class P2a, class P2b>
+inline double dist2sq(const P2a & a, const P2b & b) {
+  double dx = a.x-b.x, dy = a.y-b.y;
+  return dx * dx + dy * dy;
+}
+
+
 int main(int argc, char** argv) {
   ros::init(argc, argv, "image_localizer");
   ros::NodeHandle nh_public, nh_private("~");
@@ -57,7 +64,7 @@ int main(int argc, char** argv) {
   if (!camera_calibration_parsers::readCalibration
       (cal_filename, cal_camname, caminfo)) {
     ROS_FATAL("Could not read camera '%s' in camera_calibration file '%s'",
-             cal_camname.c_str(), cal_filename.c_str());
+              cal_camname.c_str(), cal_filename.c_str());
     return -1;
   }
   image_geometry::PinholeCameraModel cam_model;
@@ -90,7 +97,7 @@ int main(int argc, char** argv) {
   // load background image
   std::string bg_filename = ros::package::getPath("rossumo") + "/data/bg.png";
   cv::Mat3b frame, frame_rect, viz;
-  cv::Mat bg = cv::imread(bg_filename, cv::IMREAD_COLOR), fg;
+  cv::Mat bg = cv::imread(bg_filename, cv::IMREAD_COLOR), fg, fg_thres;
   if (!bg.empty()) {
     ROS_INFO("Successfully loaded background '%s'", bg_filename.c_str());
     bgsub->apply(bg, fg, 1);
@@ -106,7 +113,7 @@ int main(int argc, char** argv) {
   //params.maxThreshold = 256;
   // Filter by Area.
   params.filterByArea = true;
-  params.minArea = 1000;
+  params.minArea = 400;
   params.maxArea = 1E10;
   params.filterByCircularity = false;
   params.filterByConvexity = false;
@@ -137,6 +144,8 @@ int main(int argc, char** argv) {
   ros::Publisher pt_pub = nh_public.advertise<geometry_msgs::PointStamped>("robot", 1);
   geometry_msgs::PointStamped msg;
   msg.header.frame_id = "camera_frame";
+  cv::Point2f prev_pt;
+  bool prev_pt_set = false;
 
   // loop
   ros::Rate rate(20);
@@ -152,17 +161,46 @@ int main(int argc, char** argv) {
 
     // find object by differenciation - do not update model
     bgsub->apply(frame_rect, fg, 0);
+    cv::threshold(fg, fg_thres, 250, 255, CV_THRESH_BINARY);
 
     // find biggest blob
-    blob_detec->detect(fg, keypoints);
-    ROS_INFO_THROTTLE(1, "%li keypoints found in %i ms",
-                      keypoints.size(),
-                      (int) (1000 * (ros::Time::now() - begin_time).toSec()));
+    keypoints.clear();
+    double white_rate = 1. * cv::countNonZero(fg_thres) / (fg.cols * fg.rows);
+    if (white_rate > .05) {
+      ROS_WARN_THROTTLE(1, "Foreground too white, you should reset it!");
+    }
+    else {
+      blob_detec->detect(fg_thres, keypoints);
+      ROS_INFO_THROTTLE(1, "%li keypoints found in %i ms",
+                        keypoints.size(),
+                        (int) (1000 * (ros::Time::now() - begin_time).toSec()));
+    }
 
     // convert pixel to point
-    if (keypoints.size() == 1) {
-      cv::Point2f pt = keypoints.front().pt;
-      cv::Point3d ray = cam_model.projectPixelTo3dRay(pt);
+    cv::Point2f curr_pt;
+    bool curr_pt_set = false;
+    unsigned int nkp = keypoints.size();
+    if (nkp == 1) {
+      curr_pt_set = true;
+      curr_pt = keypoints.front().pt;
+    }
+    else if (nkp >= 2 && prev_pt_set) { // find closest keypoint from prev_pt
+      curr_pt_set = true;
+      curr_pt = keypoints.front().pt;
+      double best_dist = dist2sq(curr_pt, prev_pt);
+      for (unsigned int i = 1; i < nkp; ++i) {
+        double curr_dist = dist2sq(keypoints[i].pt, prev_pt);
+        if (best_dist > curr_dist) {
+          best_dist = curr_dist;
+          curr_pt = keypoints[i].pt;
+        }
+      } // end for i
+    }
+
+    if (curr_pt_set) {
+      prev_pt = curr_pt;
+      prev_pt_set = true;
+      cv::Point3d ray = cam_model.projectPixelTo3dRay(curr_pt);
       msg.header.stamp = begin_time;
       msg.point.x = ray.x;
       msg.point.y = ray.y;
@@ -185,6 +223,10 @@ int main(int argc, char** argv) {
                        cv::Scalar(0,0,255), cv::DrawMatchesFlags::DEFAULT );
     cv::drawKeypoints( viz, keypoints, viz,
                        cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    if (prev_pt_set)
+      cv::circle(viz, prev_pt, 5, CV_RGB(0, 170, 0), -1);
+    if (curr_pt_set)
+      cv::circle(viz, curr_pt, 5, CV_RGB(0, 255, 0), -1);
 
     // display
     //cv::imshow("frame", frame);
