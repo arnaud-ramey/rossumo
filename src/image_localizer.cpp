@@ -61,8 +61,10 @@ int main(int argc, char** argv) {
       cal_camname = "/camera";
   sensor_msgs::CameraInfo caminfo;
   cv::Mat mapx, mapy, intrinsics, distortion;
-  if (!camera_calibration_parsers::readCalibration
-      (cal_filename, cal_camname, caminfo)) {
+  //~ bool ok = camera_calibration_parsers::readCalibration
+      //~ (cal_filename, cal_camname, caminfo);
+  bool ok = false;
+  if (!ok) {
     ROS_FATAL("Could not read camera '%s' in camera_calibration file '%s'",
               cal_camname.c_str(), cal_filename.c_str());
     return -1;
