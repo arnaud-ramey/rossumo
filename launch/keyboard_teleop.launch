@@ -1,0 +1,12 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+<!-- keyboard teleoperation
+https://github.com/ros-teleop/teleop_twist_keyboard/blob/master/teleop_twist_keyboard.py -->
+  <node pkg="rossumo" type="teleop_twist_keyboard.py" name="teleop"
+        output="screen">
+    <param name="speed" value="20."/>
+    <param name="turn" value="20."/>
+  </node>
+</group>
+</launch>

@@ -1,0 +1,11 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+<!--
+  $ rosrun image_view image_view image:=/rossumo1/camera/image_raw
+  $ rosrun image_view image_view image:=/rossumo1/camera/image_rect_color
+-->
+  <node pkg="image_view" type="image_view" output="screen" name="rgb_viewer"
+        args="image:=camera/image_raw"/>
+</group>
+</launch>

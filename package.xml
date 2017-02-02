@@ -1,21 +1,19 @@
 <?xml version="1.0"?>
 <!-- doc: http://wiki.ros.org/catkin/package.xml -->
 <package format="2">
-  <name>camera_localizer</name>
+  <name>rossumo</name>
   <version>0.0.0</version>
   <description>
       Wrapper of the ARDroneSDK3 sample "JumpingSumoPiloting.c" as a C++ lightweight class for ROS.
   </description>
   <maintainer email="arnaud.a.ramey@gmail.com">Arnaud Ramey</maintainer>
-  <license>LGPLv3</license>
+  <license>GPLv2</license>
   <!-- dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
-<!--
   <depend>camera_calibration_parsers</depend>
   <depend>cv_bridge</depend>
   <depend>image_geometry</depend>
   <depend>image_transport</depend>
--->
   <depend>roscpp</depend>
   <depend>roslib</depend>
   <depend>std_msgs</depend>

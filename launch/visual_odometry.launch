@@ -1,0 +1,56 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+  <!--
+  To record a bag from RGB video stream:
+  $ rosbag record /rossumo1/cmd_vel /rossumo1/camera/image_raw
+
+  Conversion bag ==> jpg files
+  http://wiki.ros.org/rosbag/Tutorials/Exporting%20image%20and%20video%20data#Exporting_jpegs_from_bag_file
+  -->
+<!--
+  <node pkg="rosbag" type="play" name="rosbag"
+    args="/home/arnaud/sumo/bags/easy_circles.bag -d 2"/>
+  <node name="extract" pkg="image_view" type="extract_images" respawn="false" output="screen" cwd="ROS_HOME">
+    <param name="sec_per_frame" value="0.01"/>
+    <remap from="image" to="camera/image_raw"/>
+  </node>
+-->
+
+<!--
+$ git clone https://github.com/srv/srv_tools.git
+https://github.com/srv/srv_tools/blob/indigo/bag_tools/scripts/image_sequence_publisher.py
+-->
+  <node name="img_pub" pkg="bag_tools" type="image_sequence_publisher.py" output="screen" respawn="true">
+    <param name="image_dir" value="/home/arnaud/sumo/bags"/>
+    <param name="file_pattern" value="*.jpg"/>
+    <param name="camera_info_file" value="$(find rossumo)/data/sumo_camera_parameters.yaml"/>
+    <param name="frequency" value="5"/>
+  </node>
+  <!-- rectify image
+    http://wiki.ros.org/image_proc -->
+  <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc" />
+
+  <!-- static transform base_link => camera
+    http://wiki.ros.org/tf -->
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster"
+        args=".03 0 -.03  -1.57 0 -1.57 /base_link /camera 100" />
+
+  <!--
+  http://wiki.ros.org/viso2_ros
+  https://github.com/srv/viso2/blob/ad3c24aacfef572f6f8a142cb7e4ad33db2a3811/viso2_ros/src/mono_odometer.cpp
+  $ git clone https://github.com/srv/viso2.git
+
+  "_queue_size" trick:
+  http://lists.willowgarage.com/pipermail/pr2-users/2010-September/001136.html
+   -->
+  <remap from="image" to="camera/image_rect_color"/>
+  <node pkg="viso2_ros" type="mono_odometer" name="mono_odometer" output="screen"
+        args="_queue_size:=10">
+  <!-- Height of the camera above the ground in meters. -->
+  <param name="camera_height" value=".055"/>
+  <!-- Pitch of the camera in radiants, negative pitch means looking downwards. -->
+  <param name="camera_pitch" value="0"/>
+  </node>
+</group>
+</launch>

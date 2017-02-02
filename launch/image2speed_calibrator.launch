@@ -1,0 +1,44 @@
+<launch>
+<arg name="robot" default="rosmip1" />
+<arg name="device" default="/dev/input/js1" />
+<arg name="tf_reset" default="false" />
+<!-- MIP driver -->
+<include unless="$(arg tf_reset)" file="$(find rosmip)/launch/rosmip.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="output" value="log" />
+</include>
+<!-- MIP joypad teleoperation -->
+<include unless="$(arg tf_reset)" file="$(find rosmip)/launch/joy_teleop.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="device" value="$(arg device)" />
+</include>
+<!-- lower speed of joypad teleoperation -->
+<param name="/$(arg robot)/scale_linear" value=".5" />
+
+<group ns="$(arg robot)">
+  <!-- image2camera_tf -->
+  <node pkg="rossumo" type="image2camera_tf.exe" name="image2camera_tf" required="true"
+        output="screen" args="_reset:=$(arg tf_reset) _cell_width:=1.36">
+  </node>
+
+  <!-- image_localizer -->
+  <node unless="$(arg tf_reset)" pkg="rossumo" type="image_localizer.exe" name="image_localizer"
+        output="screen" args="_display:=true" required="true">
+  </node>
+
+  <!-- speed_calibrator -->
+  <node unless="$(arg tf_reset)" pkg="rossumo" type="speed_calibrator.exe" name="speed_calibrator"
+        output="screen" args="_goalz:=.05" required="true">
+  </node>
+
+  <!-- TF: odom -> world -->
+  <node unless="$(arg tf_reset)" pkg="tf" type="static_transform_publisher" name="odom2world_broadcaster" output="screen"
+      args="0 0 0  0 0 0  /world  /odom 100" />
+
+
+  <!-- rviz -->
+  <node unless="$(arg tf_reset)" pkg="rviz" type="rviz" name="rviz" output="screen"
+      args="-display-config $(find rossumo)/config/rviz_image_localizer.rviz" />
+
+</group>
+</launch>

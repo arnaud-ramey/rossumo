@@ -1,0 +1,20 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+  <param name="axis_angular" value="1"/> <!-- tilt -->
+  <param name="axis_linear" value="0"/> <!-- tilt -->
+  <param name="button_180turn" value="6"/> <!-- down rocker -->
+  <param name="button_360turn" value="7"/> <!-- up rocker -->
+  <param name="button_90left" value="8"/>  <!-- left rocker -->
+  <param name="button_90right" value="9"/> <!-- right rocker -->
+  <param name="button_anim" value="0"/> <!-- "1" -->
+  <param name="button_deadman" value="1"/> <!-- "2" -->
+  <param name="button_high_jump" value="10"/> <!-- "10" -->
+  <param name="button_posture" value="4"/>  <!-- "+" -->
+  <param name="offset_linear" value="-5"/>
+  <param name="scale_angular" value="5"/>
+  <param name="scale_linear" value="8"/>
+  <!-- Sumo specific teleoperation driver -->
+  <node pkg="rossumo" type="sumo_teleop_joy.exe" name="teleop" output="screen"/>
+</group>
+</launch>

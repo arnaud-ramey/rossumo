@@ -1,0 +1,14 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<arg name="ip_address" default="192.168.2.1" />
+<group ns="$(arg robot)">
+  <node pkg="rossumo" type="rossumo.exe" name="driver" required="true" output="screen">
+    <param name="camera_calibration_filename" value="$(find rossumo)/data/sumo_camera_parameters.yaml"/>
+    <param name="camera_calibration_camname" value="head_camera"/>
+    <param name="ip_address" value="$(arg ip_address)"/>
+    <param name="discovery_port" value="44444"/>
+    <param name="max_vel_lin" value="50"/>
+    <param name="max_vel_ang" value="50"/>
+  </node>
+</group>
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+  <!-- Driver for the joystick. -->
+  <node pkg="wiimote" type="wiimote_node.py" name="wiimote_node" output="screen"/>
+</group>
+</launch>
