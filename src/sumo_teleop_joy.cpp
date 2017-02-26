@@ -39,7 +39,7 @@ std::string posture = "jumper";
 bool high_jump_before = false, posture_before = false, anim_before = false;
 bool sharp_turn_before = false;
 std_msgs::String string_msg;
-ros::Publisher posture_pub, cmd_vel_pub, high_jump_pub, sharp_turn_pub, anim_pub;
+ros::Publisher posture_pub, _cmd_vel_pub, high_jump_pub, sharp_turn_pub, anim_pub;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +51,7 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
   if (!deadman_ok) {
     ROS_INFO_THROTTLE(10, "Dead man button %i is not pressed, sending a 0 speed order.", button_deadman);
     geometry_msgs::Twist vel;
-    cmd_vel_pub.publish(vel);
+    _cmd_vel_pub.publish(vel);
     return;
   }
   // sharp turns at 90°
@@ -126,7 +126,7 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
     vel.linear.x = ((joy->axes[axis_linear]-offset_linear) * scale_linear);
   if (axis_angular < naxes)
     vel.angular.z = ((joy->axes[axis_angular]-offset_angular) * scale_angular);
-  cmd_vel_pub.publish(vel);
+  _cmd_vel_pub.publish(vel);
 } // end joy_cb();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
   ros::Subscriber joy_sub = nh_public.subscribe<sensor_msgs::Joy>("joy", 1,  joy_cb);
   // publishers
   anim_pub = nh_public.advertise<std_msgs::String>("anim", 1);
-  cmd_vel_pub = nh_public.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+  _cmd_vel_pub = nh_public.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   high_jump_pub = nh_public.advertise<std_msgs::Empty>("high_jump", 1);
   posture_pub = nh_public.advertise<std_msgs::String>("set_posture", 1);
   sharp_turn_pub = nh_public.advertise<std_msgs::Float32>("sharp_turn", 1);

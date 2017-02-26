@@ -59,6 +59,7 @@ public:
     // create publishers
     _it = new image_transport::ImageTransport(_nh_public);
     _cmd_vel_sub = _nh_public.subscribe("cmd_vel", 1, &RosSumo::cmd_vel_cb, this);
+    _cmd_vel_norm_sub = _nh_public.subscribe("cmd_vel_norm", 1, &RosSumo::cmd_vel_norm_cb, this);
     _anim_sub = _nh_public.subscribe("anim", 1, &RosSumo::anim_cb, this);
     _posture_sub = _nh_public.subscribe("set_posture", 1, &RosSumo::posture_cb, this);
     _sharp_turn_sub = _nh_public.subscribe("sharp_turn", 1, &RosSumo::sharp_turn_cb, this);
@@ -128,7 +129,48 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
 
+  //! check speed calibration: "sumo_speed_calibrate.ods"
+  inline void speeds2ticks(const double & v_norm, const double & w_norm,
+                    int & v, int & w) {
+    // compute v
+    if (fabs(v_norm) < 1E-2)
+      v = 0;
+    else if(v_norm > 0)
+      v = (v_norm + 0.1405584209307) / 0.0230341262135;
+    else
+      v = -(-v_norm + 0.1405584209307) / 0.0230341262135;
+    // compute w
+    if (fabs(w_norm) < 1E-2)
+      w = 0;
+    else
+      w = -w_norm / 0.05;
+  }
+
+  inline void ticks2speeds(const int & v, const int & w,
+                    double & v_norm, double & w_norm) {
+    // compute v
+    if (abs(v) < 10)
+      v_norm = 0;
+    else if(v_norm > 0)
+      v_norm = 0.0230341262135 * v - 0.1405584209307;
+    else
+      v_norm = -(-0.0230341262135 * v - 0.1405584209307);
+    // compute w
+    w_norm = -0.05 * w;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   void cmd_vel_cb(const geometry_msgs::TwistConstPtr & msg) { set_speeds(msg->linear.x, -msg->angular.z); }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  void cmd_vel_norm_cb(const geometry_msgs::TwistConstPtr & msg) {
+    int v, w;
+    speeds2ticks(msg->linear.x, msg->angular.z, v, w);
+    ROS_INFO_THROTTLE(1, "cmd_vel_norm_cb(%g, %g)->(%i, %i)", msg->linear.x, msg->angular.z, v, w);
+    set_speeds(v, w);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -229,7 +271,7 @@ protected:
 
   image_transport::ImageTransport* _it;
   image_transport::Publisher _image_raw_pub, _image_rect_pub;
-  ros::Subscriber _cmd_vel_sub, _high_jump_sub, _long_jump_sub, _posture_sub;
+  ros::Subscriber _cmd_vel_sub, _cmd_vel_norm_sub, _high_jump_sub, _long_jump_sub, _posture_sub;
   ros::Subscriber _anim_sub, _sharp_turn_sub;
   ros::Publisher _caminfo_pub, _volume_pub, _battery_percentage_pub, _posture_pub;
   ros::Publisher _link_quality_pub, _alert_pub, _outdoor_pub;

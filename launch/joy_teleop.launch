@@ -1,6 +1,6 @@
 <launch>
 <arg name="robot" default="rossumo1" />
-<arg name="device" default="/dev/input/js0" />
+<arg name="device" default="/dev/input/js2" />
 <group ns="$(arg robot)">
   <!-- Driver for the joystick. -->
   <node pkg="joy" type="joy_node" name="joy" output="screen" >
@@ -16,8 +16,8 @@
   <param name="button_anim" value="6"/>
   <param name="button_high_jump" value="4"/>
   <param name="button_posture" value="5"/>
-  <param name="scale_angular" value="1"/>
-  <param name="scale_linear" value="1"/>
+  <param name="scale_angular" value="25"/>
+  <param name="scale_linear" value="50"/>
 
   <node pkg="rossumo" type="sumo_teleop_joy.exe" name="teleop" output="screen"/>
 </group>

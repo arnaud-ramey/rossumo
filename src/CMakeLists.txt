@@ -1,3 +1,9 @@
+add_executable(armarker2pose.exe  armarker2pose.cpp)
+target_link_libraries(armarker2pose.exe ${catkin_LIBRARIES})
+
+add_executable(blob_tracker.exe  blob_tracker.cpp)
+target_link_libraries(blob_tracker.exe ${catkin_LIBRARIES})
+
 add_executable(light_sumo_test.exe light_sumo_test.cpp)
 target_link_libraries(light_sumo_test.exe
   ${catkin_LIBRARIES} ${ARDRONESDK3_LIBRARIES})
