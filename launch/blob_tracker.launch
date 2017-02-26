@@ -1,0 +1,64 @@
+<launch>
+<arg name="sumo_name" default="sumo_black" />
+<arg name="usebag" default="false" />
+
+<!-- leader: MiP -->
+<!--
+<include unless="$(arg usebag)"  file="$(find rosmip)/launch/rosmip.launch">
+  <arg name="robot" value="mip" />
+</include>
+<include unless="$(arg usebag)"  file="$(find rosmip)/launch/joy_teleop.launch">
+  <arg name="robot" value="mip" />
+  <arg name="device" value="/dev/input/js1" />
+</include>
+-->
+
+<!-- follower: sumo_black -->
+<include unless="$(arg usebag)"  file="$(find rossumo)/launch/rossumo.launch">
+  <arg name="robot" value="$(arg sumo_name)" />
+  <arg name="ip_address" value="192.168.2.1"/>
+</include>
+
+<group ns="$(arg sumo_name)">
+  <node if="$(arg usebag)"  pkg="rosbag" type="play" name="rosbag"
+        args="--loop /home/arnaud/Desktop/sumo/2017-02-25-12-43-02.bag"/>
+
+<!--
+  <node name="extract" pkg="image_view" type="extract_images" respawn="false" output="screen" cwd="ROS_HOME">
+    <remap from="image" to="/sumo_black/camera/image_raw"/>
+  </node>
+-->
+
+  <node pkg="rossumo" type="blob_tracker.exe" name="blob_tracker" output="screen">
+
+    <!-- yellow bar -->
+    <param name="hue_min" value="33" />
+    <param name="hue_max" value="65" />
+    <param name="saturation_min" value="85" />
+    <param name="saturation_max" value="255" />
+    <param name="value_min" value="100" />
+    <param name="value_max" value="255" />
+
+    <!-- orange bar -->
+<!--
+    <param name="hue_min" value="143" />
+    <param name="hue_max" value="182" />
+    <param name="saturation_min" value="119" />
+    <param name="saturation_max" value="255" />
+    <param name="value_min" value="100" />
+    <param name="value_max" value="255" />
+-->
+
+    <param name="min_blob_size" value="30" />
+    <param name="max_blob_size" value="100" />
+    <param name="max_v" value="30" />
+    <param name="max_w" value="30" />
+    <param name="x_deadzone" value=".2" />
+    <param name="y_deadzone" value=".2" />
+
+<!--
+    <remap from="cmd_vel" to="foo" />
+-->
+  </node>
+</group>
+</launch>
