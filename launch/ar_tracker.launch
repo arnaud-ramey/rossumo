@@ -2,7 +2,6 @@
 <arg name="sumo_name" default="sumo_black" />
 
 <!-- leader: MiP -->
-<!--
 <include file="$(find rosmip)/launch/rosmip.launch">
   <arg name="robot" value="mip" />
 </include>
@@ -10,7 +9,6 @@
   <arg name="robot" value="mip" />
   <arg name="device" value="/dev/input/js1" />
 </include>
--->
 
 <!-- follower: sumo_black -->
 <include file="$(find rossumo)/launch/rossumo.launch">
@@ -23,7 +21,9 @@
     args="-d $(find rossumo)/config/arpose.rviz"/>
 
   <node pkg="tf" type="static_transform_publisher" name="world_to_cam"
-    args="0 0 0.1  -1.57 0 -1.57 world camera 10" />
+    args="0 0 0.1  -1.57 0 -1.57 world camera 100" />
+  <node pkg="tf" type="static_transform_publisher" name="odom2world_tf"
+    args="0 0 0  0 0 0 world odom 100" />
 
   <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc"/>
 
@@ -43,21 +43,22 @@
 
   <!-- convert ar_pose/ARMarker => geometry_msgs/PoseStamped -->
   <node pkg="rossumo" type="armarker2pose.exe" name="armarker2pose" output="screen">
+    <param name="out_frame" value="world"/>
     <remap from="in" to="ar_pose_marker"/>
     <remap from="out" to="moving_goal"/>
   </node>
 
   <!-- empty laser scans -->
   <node pkg="rostopic" type="rostopic" name="scan_pub"
-        args="pub -r 10  scan  sensor_msgs/LaserScan  '{header: {seq: 0, stamp: {secs: 0, nsecs: 0}, frame_id: 'camera'}, angle_min: 0.0, angle_max: 0.0, angle_increment: 0.0, time_increment: 0.0, scan_time: 0.0, range_min: 0.0, range_max: 0.0, ranges: [0], intensities: [0]}'" />
+        args="pub -r 10  scan  sensor_msgs/LaserScan  '{header: {seq: 0, stamp: {secs: 0, nsecs: 0}, frame_id: 'camera'}, angle_min: 0.0, angle_max: 0.0, angle_increment: 0.0, time_increment: 0.0, scan_time: 0.0, range_min: 0.0, range_max: 0.0, ranges: [], intensities: []}'" />
 
   <!-- the goal tracker -->
   <node pkg="followme_laser" type="ros_goal_dynamic_window_tracker.exe"
         name="ros_goal_dynamic_window_tracker" output="screen">
     <param name="robot_radius" value="0.05" />
-<!--
+    <param name="goal_timeout" value="0.3" />
+
     <remap from="cmd_vel" to="cmd_vel_norm"/>
--->
   </node>
 
 </group>

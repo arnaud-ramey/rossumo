@@ -55,7 +55,11 @@ Visualization Manager:
         All Enabled: true
         ar_marker:
           Value: true
+        base_link:
+          Value: true
         camera:
+          Value: true
+        odom:
           Value: true
         world:
           Value: true
@@ -69,12 +73,15 @@ Visualization Manager:
           camera:
             ar_marker:
               {}
+          odom:
+            base_link:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background and overlay
-      Image Topic: /sumo_black/camera/image_rect
+      Image Topic: /sumo_black/camera/image_rect_color
       Name: Camera
       Overlay Alpha: 0.5
       Queue Size: 2
