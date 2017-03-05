@@ -10,11 +10,8 @@
   <license>GPLv2</license>
   <!-- dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>ar_pose</depend>
   <depend>camera_calibration_parsers</depend>
-  <depend>cv_camera</depend>
   <depend>cv_bridge</depend>
-  <depend>followme_laser</depend>
   <depend>image_geometry</depend>
   <depend>image_transport</depend>
   <depend>roscpp</depend>
