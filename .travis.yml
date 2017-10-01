@@ -12,7 +12,7 @@ before_install:
   # install required packages from Ubuntu packages
   - sudo apt-get install autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
   # try to install repo according to https://source.android.com/source/downloading.html#installing-repo
-  - mkdir ~/bin
+  - mkdir ~/bin --parents
   - export PATH=~/bin:$PATH
   - curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
   - chmod a+x ~/bin/repo
