@@ -1,4 +1,8 @@
 # travis rules for rossumo
+# use Ubuntu Trusty 14.04, compatible with ROS Indigo - check https://docs.travis-ci.com/user/ci-environment/
+sudo: required
+dist: trusty
+
 language: cpp
 compiler:
   - gcc
@@ -23,12 +27,15 @@ before_install:
   # compile ARDroneSDK3
   - ./build.sh -p arsdk-native -t build-sdk -j
   # install ROS
-  - export ROS_DISTRO=hydro
-  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
+  - export ROS_DISTRO=indigo
+  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list'
   - wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
   - sudo apt-get -qq update
-  - sudo apt-get install -y -qq ros-$ROS_DISTRO-ros-base  ros-$ROS_DISTRO-camera-calibration-parsers  ros-$ROS_DISTRO-cv-bridge  ros-$ROS_DISTRO-image-geometry  ros-$ROS_DISTRO-image-transport  ros-$ROS_DISTRO-std-msgs
+  - sudo apt-get install -y -qq  ros-$ROS_DISTRO-ros-base python-catkin-pkg python-rosdep python-wstool
   - source /opt/ros/$ROS_DISTRO/setup.bash
+  # Prepare rosdep to install dependencies.
+  - sudo rosdep init
+  - rosdep update
 
 before_script: # Use this to prepare your build for testing e.g. copy database configurations, environment variables, etc.
   # Create catkin workspace
@@ -36,6 +43,9 @@ before_script: # Use this to prepare your build for testing e.g. copy database c
   - cd ~/catkin_ws/src
   - catkin_init_workspace
   - ln -s $CI_SOURCE_PATH . # Link the repo we are testing to the new workspace
+  # package depdencies: install using rosdep.
+  - cd ~/catkin_ws
+  - rosdep install -y --from-paths src --ignore-src
 
 script: # compile
   - cd ~/catkin_ws
