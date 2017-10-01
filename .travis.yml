@@ -49,4 +49,4 @@ before_script: # Use this to prepare your build for testing e.g. copy database c
 
 script: # compile
   - cd ~/catkin_ws
-  - catkin_make  -DARDRONESDK3_PATH=~/out/Unix-base/staging/usr
+  - catkin_make  -DARDRONESDK3_PATH=~/out/arsdk-native/staging/usr
