@@ -129,21 +129,24 @@ Install rossumo
 -------------------------
 Create a new workspace
 ```bash
-$ mkdir -p catkin_ws/src; cd catkin_ws; catkin_make --only-pkg-with-deps rossumo
+$ mkdir -p catkin_ws; cd catkin_ws; 
 ```
-Clone the repo withtin the src folder
+
+Clone the repo withtin src folder
 ```bash
 $ git clone https://github.com/fotiDim/rossumo src
 ```
+
+Build Rossumo specifying the path to the ARDroneSDK3 'usr' folder
+```bash
+catkin_make --only-pkg-with-deps rossumo -DARDRONESDK3_PATH=~/out/arsdk-native/staging/usr
+```
+
 Execute the setup.bash file
 ```bash
 $ source devel/setup.bash
 ```
 
-To specify the path to the ARDroneSDK3 'usr' folder:
-```bash
-$ catkin_make --only-pkg-with-deps rossumo -DARDRONESDK3_PATH=~/out/Unix-base/staging/usr
-```
 Now you are ready to launch the Sumo driver
 
 ROS driver node
