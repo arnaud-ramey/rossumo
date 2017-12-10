@@ -4,9 +4,9 @@
 
 <p align="center">
 <img src="doc/jumping_sumo.jpg"
-   alt="sumo" style="width: 200px"/>
+alt="sumo" style="width: 200px"/>
 <img src="doc/kinetic.png"
-   alt="ROS_Kinetic" style="width: 200px"/>
+alt="ROS_Kinetic" style="width: 200px"/>
 </p>
 
 Description
@@ -47,6 +47,108 @@ Licence
 LGPL v3 (GNU Lesser General Public License version 3).
 See LICENCE.
 
+Installation
+============
+
+You first need to install the official SDK (ARDrone3) by Parrot.
+A summary of the instructions comes below.
+
+
+Dependencies
+------------
+
+```bash
+Ubuntu 14.04:
+$ sudo apt-get install phablet-tools  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
+Ubuntu 16.04:
+$ sudo apt install repo  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
+```
+
+**FFMPEG** for Trusty: you need the latest version of ```ffmpeg```.
+Use the [official PPA](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media):
+
+```bash
+$ sudo add-apt-repository ppa:mc3man/trusty-media
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade
+```
+
+Download ARDroneSDK3
+--------------------
+
+Following [the instructions](http://developer.parrot.com/docs/bebop/?c#download-all-sources):
+
+```bash
+$ repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
+$ repo sync --force-sync
+```
+
+
+Build ARDroneSDK3
+-----------------
+
+```bash
+$ ./build.sh -p arsdk-native -t build-sdk -j
+```
+
+
+Build ARDroneSDK3 samples (optional)
+------------------------------------
+
+```bash
+$ git clone https://github.com/Parrot-Developers/Samples.git
+```
+
+### New version - ```build.sh```-based
+
+```bash
+$ ./build.sh -p arsdk-native -t build-sample
+```
+
+### Old version - Makefile-based
+
+Change the lines in the Makefile:
+
+```makefile
+$ cd Samples/Unix/JumpingSumoPiloting
+$ geany Makefile
+SDK_DIR=/home/arnaud/sumo/out/Unix-base/staging/usr
+CFLAGS=-I$(IDIR) -I $(SDK_DIR)/include/
+LDIR = $(SDK_DIR)/lib/
+<check the different -L flags>
+<add json to libs>
+```
+
+```bash
+$ make
+$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
+$ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
+```
+
+Install rossumo
+-------------------------
+Create a new workspace
+```bash
+$ mkdir -p catkin_ws; cd catkin_ws; 
+```
+
+Clone the repo withtin src folder
+```bash
+$ git clone https://github.com/fotiDim/rossumo src
+```
+
+Build Rossumo specifying the path to the ARDroneSDK3 'usr' folder
+```bash
+catkin_make --only-pkg-with-deps rossumo -DARDRONESDK3_PATH=~/out/arsdk-native/staging/usr
+```
+
+Execute the setup.bash file
+```bash
+$ source devel/setup.bash
+```
+
+Now you are ready to launch the Sumo driver
+
 ROS driver node
 ===============
 
@@ -55,6 +157,7 @@ To launch the Sumo driver:
 ```bash
 $ roslaunch rossumo rossumo.launch
 ```
+Note that the Sumo driver should always be running. Open another terminal to launch other packages (e.g. joy_teleop)
 
 Node parameters
 ---------------
@@ -93,7 +196,7 @@ Send it every 10 Hz to obtain continuous motion.
 
 Play one of the predefined animations,
 among `metronome`, `ondulation`, `slalom` `slowshake`, `spin`,
-      `spinJump`, `spinToPosture`, `spiral`, `tap`.
+`spinJump`, `spinToPosture`, `spiral`, `tap`.
 
 - `set_posture`
 [std_msgs::String]
@@ -203,96 +306,6 @@ $ roslaunch rossumo wiimote_teleop.launch
 
 It is based on the [`wiimote`](http://wiki.ros.org/wiimote) package.
 
-Installation
-============
-
-You first need to install the official SDK (ARDrone3) by Parrot.
-A summary of the instructions comes below.
-
-
-Dependencies
-------------
-
-```bash
-Ubuntu 14.04:
-$ sudo apt-get install phablet-tools  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
-Ubuntu 16.04:
-$ sudo apt install repo  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
-```
-
-**FFMPEG** for Trusty: you need the latest version of ```ffmpeg```.
-Use the [official PPA](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media):
-
-```bash
-$ sudo add-apt-repository ppa:mc3man/trusty-media
-$ sudo apt-get update
-$ sudo apt-get dist-upgrade
-```
-
-Download ARDroneSDK3
---------------------
-
-Following [the instructions](http://developer.parrot.com/docs/bebop/?c#download-all-sources):
-
-```bash
-$ repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
-$ repo sync --force-sync
-```
-
-
-Build ARDroneSDK3
------------------
-
-```bash
-$ ./build.sh -p arsdk-native -t build-sdk -j
-```
-
-
-Build ARDroneSDK3 samples (optional)
-------------------------------------
-
-```bash
-$ git clone https://github.com/Parrot-Developers/Samples.git
-```
-
-### New version - ```build.sh```-based
-
-```bash
-$ ./build.sh -p arsdk-native -t build-sample
-```
-
-### Old version - Makefile-based
-
-Change the lines in the Makefile:
-
-```makefile
-$ cd Samples/Unix/JumpingSumoPiloting
-$ geany Makefile
-SDK_DIR=/home/arnaud/sumo/out/Unix-base/staging/usr
-CFLAGS=-I$(IDIR) -I $(SDK_DIR)/include/
-LDIR = $(SDK_DIR)/lib/
-<check the different -L flags>
-<add json to libs>
-```
-
-```bash
-$ make
-$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
-$ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
-```
-
-Build rossumo with Catkin
--------------------------
-
-```bash
-$ catkin_make --only-pkg-with-deps rossumo
-```
-
-To specify the path to the ARDroneSDK3 'usr' folder:
-```bash
-$ catkin_make --only-pkg-with-deps rossumo -DARDRONESDK3_PATH=~/out/Unix-base/staging/usr
-```
-
 Camera calibration
 ==================
 
@@ -309,4 +322,3 @@ $ rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.030 image:
 
 $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
 ```
-
