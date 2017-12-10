@@ -50,12 +50,17 @@ See LICENCE.
 Installation
 ============
 
-You first need to install the official SDK (ARDrone3) by Parrot.
+It is made of three steps:
+
+  1. Dependencies included in Ubuntu repos ;
+  2. The official SDK ( `ARDroneSDK3` ) by Parrot ;
+  3. This package that allows to use the SDK within ROS.
+
 A summary of the instructions comes below.
 
 
-Dependencies
-------------
+1. Dependencies included in Ubuntu repos
+----------------------------------------
 
 ```bash
 Ubuntu 14.04:
@@ -64,7 +69,7 @@ Ubuntu 16.04:
 $ sudo apt install repo  autoconf  libavahi-client-dev  libavcodec-dev  libavformat-dev  libswscale-dev
 ```
 
-**FFMPEG** for Trusty: you need the latest version of ```ffmpeg```.
+**FFMPEG** for Ubuntu 14.04: you need the latest version of ```ffmpeg```.
 Use the [official PPA](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media):
 
 ```bash
@@ -73,27 +78,36 @@ $ sudo apt-get update
 $ sudo apt-get dist-upgrade
 ```
 
-Download ARDroneSDK3
---------------------
+2a. Download ARDroneSDK3
+-----------------------
 
-Following [the instructions](http://developer.parrot.com/docs/bebop/?c#download-all-sources):
+In this example, we install the ARDroneSDK3 in `~/src/sumo` :
+Following [the instructions from Parrot](http://developer.parrot.com/docs/bebop/?c#download-all-sources):
 
 ```bash
+$ mkdir --parents ~/src/sumo
+$ cd ~/src/sumo
 $ repo init -u https://github.com/Parrot-Developers/arsdk_manifests.git
 $ repo sync --force-sync
 ```
 
+2b. Build ARDroneSDK3
+---------------------
 
-Build ARDroneSDK3
------------------
+The `-j 3` means three compiling threads simultaneously
+and is well adapted to a dual-core CPU.
+You can increase it if you have more cores.
 
 ```bash
-$ ./build.sh -p arsdk-native -t build-sdk -j
+$ ./build.sh -p arsdk-native -t build-sdk -j 3
 ```
 
 
-Build ARDroneSDK3 samples (optional)
-------------------------------------
+2c. Build ARDroneSDK3 samples (optional)
+----------------------------------------
+
+This paragraph is optional and only useful if you want to poke at the
+samples included in the `ARDroneSDK3` samples.
 
 ```bash
 $ git clone https://github.com/Parrot-Developers/Samples.git
@@ -112,7 +126,7 @@ Change the lines in the Makefile:
 ```makefile
 $ cd Samples/Unix/JumpingSumoPiloting
 $ geany Makefile
-SDK_DIR=/home/arnaud/sumo/out/Unix-base/staging/usr
+SDK_DIR=~/src/sumo/out/Unix-base/staging/usr
 CFLAGS=-I$(IDIR) -I $(SDK_DIR)/include/
 LDIR = $(SDK_DIR)/lib/
 <check the different -L flags>
@@ -121,33 +135,40 @@ LDIR = $(SDK_DIR)/lib/
 
 ```bash
 $ make
-$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
-$ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/arnaud/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting '
+$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/src/sumo/out/Unix-base/staging/usr/lib ./JumpingSumoPiloting
+$ sudo sh -c 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/src/sumo/out/Unix-base/staging/usr/lib  ./JumpingSumoPiloting'
 ```
 
-Install rossumo
--------------------------
-Create a new workspace
+3. Install this package: `rossumo`
+----------------------------------
+
+In this example, we suppose your ROS workspace is located in `~/catkin_ws`.
+
+If you have no ROS workspace yet, create a new workspace.
+If you are not familiar with ROS workspaces, check
+[their tutorial](http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment).
+
+Once the workspace is correctly configured, you can CD to it:
+
 ```bash
-$ mkdir -p catkin_ws; cd catkin_ws; 
+$ roscd
+$ pwd
+~/catkin_ws # for example
 ```
 
-Clone the repo withtin src folder
+Clone the repo within `src` folder
+
 ```bash
-$ git clone https://github.com/fotiDim/rossumo src
+$ git clone https://github.com/arnaud-ramey/rossumo src
 ```
 
 Build Rossumo specifying the path to the ARDroneSDK3 'usr' folder
+
 ```bash
-catkin_make --only-pkg-with-deps rossumo -DARDRONESDK3_PATH=~/out/arsdk-native/staging/usr
+$ catkin_make  --only-pkg-with-deps rossumo  -DARDRONESDK3_PATH=~/src/sumo/out/arsdk-native/staging/usr
 ```
 
-Execute the setup.bash file
-```bash
-$ source devel/setup.bash
-```
-
-Now you are ready to launch the Sumo driver
+Now you are ready to launch the Sumo driver.
 
 ROS driver node
 ===============
@@ -157,7 +178,10 @@ To launch the Sumo driver:
 ```bash
 $ roslaunch rossumo rossumo.launch
 ```
-Note that the Sumo driver should always be running. Open another terminal to launch other packages (e.g. joy_teleop)
+
+**Note that the Sumo driver should always be running to use the other launch files**.
+Keep it running and open another terminal
+to launch other launch files (e.g. `joy_teleop`).
 
 Node parameters
 ---------------
@@ -267,19 +291,29 @@ among `unkwnown`, `none`, `low_battery`, `critical_battery`
 
 TODO
 
+Camera view
+===========
+
+To display the camera feed in a window:
+
+```bash
+$ roslaunch rossumo camview.launch
+```
+
+![camview](doc/camview_thumb.png "camview")
+
 Keyboard remote control
 =======================
 
-To launch remote control of the Sumo thanks to keyboard
-(script from [http://wiki.ros.org/teleop_twist_keyboard](teleop_twist_keyboard),
-but copied in the package because the Kinetic version in the Ubuntu repos
-does not allow setting max speeds with parameters):
+To launch remote control of the Sumo thanks to keyboard:
 
 ```bash
 $ roslaunch rossumo joy_teleop.launch
 ```
 
-It is based on the [`teleop_twist_keyboard`](http://wiki.ros.org/teleop_twist_keyboard) package.
+The script is from [`teleop_twist_keyboard`](http://wiki.ros.org/teleop_twist_keyboard),
+but copied in the package because the Kinetic version in the Ubuntu repos
+does not allow setting max speeds with parameters
 
 Joystick remote control
 =======================
@@ -306,6 +340,8 @@ $ roslaunch rossumo wiimote_teleop.launch
 
 It is based on the [`wiimote`](http://wiki.ros.org/wiimote) package.
 
+![wiimote_teleop](doc/wiimote_teleop_thumb.png "wiimote_teleop")
+
 Camera calibration
 ==================
 
@@ -322,3 +358,7 @@ $ rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.030 image:
 
 $ rosrun camera_calibration cameracalibrator.py --size 8x10 --square 0.0298 image:=/rossumo1/rgb camera:=/camera
 ```
+
+![calib_before](doc/calib_before_thumb.png "calib_before")
+-->
+![calib_after](doc/calib_after_thumb.png "calib_after")
