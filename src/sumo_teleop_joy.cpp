@@ -105,7 +105,7 @@ void joy_cb(const sensor_msgs::Joy::ConstPtr& joy) {
     posture_pub.publish(string_msg);
     command_sent = true;
   }
-  posture_before = nbuttons > button_high_jump && joy->buttons[button_posture];
+  posture_before = posture_now;
 
   // anims
   bool anim_now = (button_anim >=0 && nbuttons > button_anim

@@ -1,0 +1,31 @@
+<launch>
+<arg name="robot" default="rossumo1" />
+<group ns="$(arg robot)">
+
+  <remap from="/rossumo1/xwiimote_node/joy" to="/rossumo1/joy" />
+  <node pkg="rosxwiimote" type="xwiimote_node.exe" name="xwiimote_node" output="screen">
+    <param name="device_idx" value="1"/>
+  </node>
+
+  <param name="axis_180_360turn" value="0"/> <!-- down-up rocker -->
+  <param name="axis_90turn" value="1"/> <!-- left-right rocker -->
+  <param name="axis_angular" value="2"/> <!-- nunchuk x -->
+  <param name="axis_linear" value="3"/> <!-- nunchuk y -->
+  <param name="button_anim" value="0"/> <!-- "1" -->
+  <param name="button_deadman" value="7"/> <!-- "C" -->
+  <param name="button_high_jump" value="10"/> <!-- "10" -->
+  <param name="button_posture" value="8"/>  <!-- "Z" -->
+<!--
+  <param name="scale_angular" value="-2"/>
+  <param name="scale_linear" value="5"/>
+-->
+  <param name="scale_angular" value="-45"/>
+  <param name="scale_linear" value="90"/>
+  <!-- Sumo specific teleoperation driver -->
+  <node pkg="rossumo" type="sumo_teleop_joy.exe" name="teleop" output="screen">
+<!--
+    <remap from="cmd_vel" to="cmd_vel_norm"/>
+-->
+  </node>
+</group>
+</launch>
